@@ -135,11 +135,6 @@ pub fn get_collection_id_from_hub(hub: &MetaData) -> i64 {
 
 pub fn url_from_request(req: &SalvoRequest) -> Url {
     let config = Config::load();
-    let base_url = config
-        .host
-        .clone()
-        .expect("Host must be specified in the config");
-
     let path_and_query = req
         .uri()
         .path_and_query()
@@ -148,7 +143,7 @@ pub fn url_from_request(req: &SalvoRequest) -> Url {
 
     let full_url = format!(
         "{}/{}",
-        base_url.trim_end_matches('/'),
+        config.host.clone(),
         path_and_query.trim_start_matches('/')
     );
 

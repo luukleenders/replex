@@ -12,12 +12,9 @@ pub async fn handler(
     ctrl: &mut FlowCtrl,
 ) {
     let config = Config::load();
-    let base_url = config
-        .host
-        .clone()
-        .unwrap_or_else(|| panic!("Host must be specified in the config"));
+    let host = config.host.clone();
 
-    let proxy = Proxy::new(base_url);
+    let proxy = Proxy::new(host);
     let timeout_duration = Duration::from_secs(60 * 200);
     let proxy_result = timeout(timeout_duration, async {
         proxy.handle(req, depot, res, ctrl).await

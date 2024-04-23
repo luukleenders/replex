@@ -178,10 +178,6 @@ impl PlexClient {
             .token
             .as_ref()
             .expect("Expected to have a token in header or query");
-        let base_url = config
-            .host
-            .clone()
-            .unwrap_or_else(|| panic!("Host must be specified in the config"));
 
         Self {
             http_client: reqwest_middleware::ClientBuilder::new(
@@ -193,7 +189,7 @@ impl PlexClient {
                     .expect("Failed to build HTTP client"),
             )
             .build(),
-            host: base_url,
+            host: config.host.clone(),
             x_plex_token: token.to_string(),
             x_plex_client_identifier: params.client_identifier.clone(),
             x_plex_platform: params.platform.clone(),
