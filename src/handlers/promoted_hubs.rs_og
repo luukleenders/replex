@@ -1,0 +1,138 @@
+use itertools::Itertools;
+use salvo::prelude::*;
+
+use crate::config::Config;
+use crate::models::{MediaContainer, MediaContainerWrapper, Platform};
+use crate::plex::client::PlexClient;
+use crate::plex::models::PlexContext;
+use crate::transform::*;
+use crate::utils::*;
+
+#[handler]
+pub async fn handler(
+    req: &mut Request, res: &mut Response,
+) -> Result<(), anyhow::Error> {
+    // tracing::info!("Promoted hubs handler called");
+
+    let config: Config = Config::dynamic(req).extract().unwrap();
+    let params: PlexContext = req.extract().await.unwrap();
+    let plex_client = PlexClient::from_request(req, params.clone());
+    let content_type = get_content_type_from_headers(req.headers_mut());
+
+    // if params.clone().pinned_content_directory_id.is_some()
+    //     && params.clone().content_directory_id.unwrap()[0]
+    //         != params.clone().pinned_content_directory_id.unwrap()[0]
+    // {
+    //     // We only fill the first one.
+    //     let mut container: MediaContainerWrapper<MediaContainer> =
+    //         MediaContainerWrapper::default();
+    //     container.content_type = content_type.clone();
+    //     container.media_container.size = Some(0);
+    //     // container.media_container.allow_sync = Some("1".to_string());
+    //     container.media_container.identifier =
+    //         Some("com.plexapp.plugins.library".to_string());
+    //     res.render(container);
+    //     return Ok(());
+    // }
+
+    if params.clone().pinned_content_directory_id.is_some()
+        && params.clone().content_directory_id.unwrap()[0]
+            != params.clone().pinned_content_directory_id.unwrap()[0]
+    {
+        // We only fill the first one.
+        let mut container = MediaContainerWrapper::<MediaContainer> {
+            content_type: content_type.clone(),
+            ..Default::default()
+        };
+
+        container.media_container.size = Some(0);
+        // container.media_container.allow_sync = Some("1".to_string());
+        container.media_container.identifier =
+            Some("com.plexapp.plugins.library".to_string());
+        res.render(container);
+        return Ok(());
+    }
+
+    if params.clone().pinned_content_directory_id.is_some() {
+        // first directory, load everything here because we wanna reemiiiixxx
+        add_query_param_salvo(
+            req,
+            "contentDirectoryID".to_string(),
+            params
+                .clone()
+                .pinned_content_directory_id
+                .clone()
+                .unwrap()
+                .iter()
+                .join(",")
+                .to_string(),
+        );
+    }
+
+    // we want guids for banners
+    add_query_param_salvo(req, "includeGuids".to_string(), "1".to_string());
+
+    // we want continue watching
+    // add_query_param_salvo(req, "excludeContinueWatching".to_string(), "0".to_string());
+
+    let mut count = params.clone().count.unwrap_or(25);
+
+    // some androids have trouble loading more for hero style. So load more at once
+    if params.platform == Platform::Android {
+        count = 50
+    }
+
+    // Hack, as the list could be smaller when removing watched items. So we request more.
+    if config.exclude_watched && count < 50 {
+        count = 50;
+    }
+
+    add_query_param_salvo(req, "count".to_string(), count.to_string());
+
+    // Build the URL for the upstream request.
+    let url = format!(
+        "{}{}",
+        config.host.as_ref().unwrap(),
+        &req.uri_mut()
+            .path_and_query()
+            .expect("Path and query required")
+    );
+
+    // Get the headers from the request.
+    // let headers = req.headers().clone();
+
+    // // Get method from request.
+    // let method = req.method().clone();
+
+    let upstream_res = plex_client.get(&url).await?;
+    match upstream_res.status() {
+        reqwest::StatusCode::OK => (),
+        status => {
+            tracing::error!(status = ?status, res = ?upstream_res, "Failed to get plex response");
+            return Err(
+                salvo::http::StatusError::internal_server_error().into()
+            );
+        }
+    };
+
+    let mut container: MediaContainerWrapper<MediaContainer> =
+        from_reqwest_response(upstream_res).await?;
+    container.content_type = content_type;
+
+    // TransformBuilder::new(plex_client, params.clone())
+    //     // .with_transform(HubStyleTransform { is_home: true })
+    //     // // .with_transform(HubSectionDirectoryTransform)
+    //     // .with_transform(HubWatchedTransform)
+    //     // .with_transform(HubMixTransform)
+    //     // // .with_transform(HubChildrenLimitTransform {
+    //     // //     limit: params.clone().count.unwrap(),
+    //     // // })
+    //     // .with_transform(UserStateTransform)
+    //     // .with_transform(HubKeyTransform)
+    //     // .with_transform(ReorderHubsTransform)
+    //     .apply_to(&mut container)
+    //     .await;
+
+    // res.render(container);
+    Ok(())
+}

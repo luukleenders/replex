@@ -1,43 +1,36 @@
-use crate::{
-    config::Config,
-    models::*,
-    plex_client::{self, PlexClient},
-    utils::*,
-};
+use crate::config::Config;
+use crate::models::*;
+use crate::plex::client::PlexClient;
+use crate::plex::models::*;
+use crate::plex::traits::{Collection, CollectionChildren, SectionCollections};
+use crate::utils::*;
 
 use async_recursion::async_recursion;
 use async_trait::async_trait;
 use futures_util::{
-    future::{self, join_all, LocalBoxFuture},
-    stream::{FuturesOrdered, FuturesUnordered},
+    future::{self},
+    stream::FuturesOrdered,
     StreamExt,
 };
 use itertools::Itertools;
 use rhai::serde::{from_dynamic, to_dynamic};
-use rhai::{Dynamic, Engine, EvalAltResult, Scope};
-use serde::{Deserialize, Deserializer, Serialize};
-use std::cell::RefCell;
+use rhai::{Dynamic, Engine, Scope};
 use std::sync::Arc;
-use std::{cell::Cell, collections::HashMap};
-use strum_macros::Display as EnumDisplay;
-use strum_macros::EnumString;
-use tokio::task::JoinSet;
-use tokio::time::Instant;
 
 #[async_trait]
 pub trait Transform: Send + Sync + 'static {
     async fn transform_metadata(
         &self,
-        item: &mut MetaData,
-        plex_client: PlexClient,
-        options: PlexContext,
+        _item: &mut MetaData,
+        _plex_client: PlexClient,
+        _options: PlexContext,
     ) {
     }
     async fn transform_mediacontainer(
         &self,
         item: MediaContainer,
-        plex_client: PlexClient,
-        options: PlexContext,
+        _plex_client: PlexClient,
+        _options: PlexContext,
     ) -> MediaContainer {
         item
     }
@@ -47,17 +40,17 @@ pub trait Transform: Send + Sync + 'static {
 pub trait Filter: Send + Sync + 'static {
     async fn filter_metadata(
         &self,
-        item: &mut MetaData,
-        plex_client: PlexClient,
-        options: PlexContext,
+        _item: &mut MetaData,
+        _plex_client: PlexClient,
+        _options: PlexContext,
     ) -> bool {
         true
     }
     async fn filter_mediacontainer(
         &self,
-        item: MediaContainer,
-        plex_client: PlexClient,
-        options: PlexContext,
+        _item: MediaContainer,
+        _plex_client: PlexClient,
+        _options: PlexContext,
     ) -> bool {
         true
     }
@@ -110,7 +103,7 @@ impl TransformBuilder {
         metadata: &mut Vec<MetaData>,
     ) -> Vec<MetaData> {
         let mut filtered_childs: Vec<MetaData> = vec![];
-        'outer: for mut item in metadata {
+        'outer: for item in metadata {
             for filter in self.filters.clone() {
                 // dbg!("filtering");
                 if !filter
@@ -142,29 +135,24 @@ impl TransformBuilder {
     }
 
     // TODO: join async filters
-    pub async fn apply_to(
-        self,
-        container: &mut MediaContainerWrapper<MediaContainer>,
-    ) {
-        for t in self.transforms.clone() {
+    pub async fn apply_to(self, container: &mut MediaContainer) {
+        for transform in self.transforms.clone() {
             let futures =
-                container.media_container.children_mut().iter_mut().map(
-                    |x: &mut MetaData| {
-                        t.transform_metadata(
-                            x,
-                            self.plex_client.clone(),
-                            self.options.clone(),
-                        )
-                    },
-                );
+                container.children_mut().iter_mut().map(|x: &mut MetaData| {
+                    transform.transform_metadata(
+                        x,
+                        self.plex_client.clone(),
+                        self.options.clone(),
+                    )
+                });
 
             future::join_all(futures).await;
 
             // dont use join as it needs ti be executed in order
             // let l = std::cell::RefCell::new(&mut container.media_container);
-            container.media_container = t
+            container = transform
                 .transform_mediacontainer(
-                    container.media_container.clone(),
+                    container,
                     self.plex_client.clone(),
                     self.options.clone(),
                 )
@@ -173,19 +161,13 @@ impl TransformBuilder {
         }
 
         // filter behind transform as transform can load in additional data
-        let children = container.media_container.children_mut();
+        let children = container.children_mut();
         let new_children = self.apply_to_metadata(children).await;
-        container.media_container.set_children(new_children);
+        container.set_children(new_children);
 
-        if container.media_container.size.is_some() {
-            container.media_container.size = Some(
-                container
-                    .media_container
-                    .children_mut()
-                    .len()
-                    .try_into()
-                    .unwrap(),
-            );
+        if container.size.is_some() {
+            container.size =
+                Some(container.children_mut().len().try_into().unwrap());
         }
     }
 }
@@ -200,10 +182,8 @@ impl Filter for CollectionHubPermissionFilter {
         &self,
         item: &mut MetaData,
         plex_client: PlexClient,
-        options: PlexContext,
+        _options: PlexContext,
     ) -> bool {
-        tracing::debug!("filter collection permissions");
-
         if item.is_hub() && !item.is_collection_hub() {
             return true;
         }
@@ -213,24 +193,19 @@ impl Filter for CollectionHubPermissionFilter {
         let section_id: i64 = item.library_section_id.unwrap_or_else(|| {
             item.clone()
                 .children()
-                .get(0)
+                .first()
                 .unwrap()
                 .library_section_id
                 .expect("Missing Library section id")
         });
         // dbg!(section_id);
         // let mut custom_collections = plex_client.get_section_collections(section_id).await.unwrap();
-        let mut custom_collections = plex_client
-            .clone()
-            .get_cached(
-                plex_client.get_section_collections(section_id),
-                format!("sectioncollections:{}", section_id).to_string(),
-            )
-            .await
-            .unwrap();
+        let mut custom_collections =
+            SectionCollections::get(&plex_client, section_id)
+                .await
+                .unwrap();
         // dbg!(&custom_collections);
         let custom_collections_ids: Vec<String> = custom_collections
-            .media_container
             .children()
             .iter()
             .map(|c| c.rating_key.clone().unwrap())
@@ -303,56 +278,32 @@ impl Filter for CollectionHubPermissionFilter {
 // }
 
 #[derive(Default, Debug)]
-pub struct HubMixTransform;
+pub struct ReorderHubsTransform;
 
 #[async_trait]
-impl Transform for HubMixTransform {
+impl Transform for ReorderHubsTransform {
     async fn transform_mediacontainer(
         &self,
         mut item: MediaContainer,
-        plex_client: PlexClient,
-        options: PlexContext,
+        _plex_client: PlexClient,
+        _options: PlexContext,
     ) -> MediaContainer {
         let config: Config = Config::figment().extract().unwrap();
-        let mut new_hubs: Vec<MetaData> = vec![];
-        //item.identifier = Some("tv.plex.provider.discover".to_string());
-        // let mut library_section_id: Vec<Option<u32>> = vec![]; //librarySectionID
-        for mut hub in item.children_mut() {
-            if hub.size.unwrap() == 0 {
-                continue;
-            }
-            // we only process collection hubs
-            if !hub.is_collection_hub() {
-                new_hubs.push(hub.to_owned());
-                continue;
-            }
+        let mut hubs_clone = item.children_mut().clone();
 
-            //hub.context = Some("hub.home.watchlist_available".to_string());
-            //hub.r#type = "clip".to_string();
-            // hub.placeholder = Some(SpecialBool::new(true));
-            //hub.placeholder = Some(true);
-
-            let p = new_hubs.iter().position(|v| v.title == hub.title);
-            // if hub.r#type != "clip" {
-            //     hub.r#type = "mixed".to_string();
-            // }
-            match p {
-                Some(v) => {
-                    new_hubs[v].key = Some(merge_children_keys(
-                        new_hubs[v].key.clone().unwrap(),
-                        hub.key.clone().unwrap(),
-                    ));
-                    let c = new_hubs[v].children();
-                    new_hubs[v].set_children(
-                        c.into_iter()
-                            .interleave(hub.children())
-                            .collect::<Vec<MetaData>>(),
-                    );
+        if let Some(priority_titles) = &config.priority_hubs {
+            // Iterate over priority titles in reverse to maintain the correct order when reinserting
+            for title in priority_titles.iter().rev() {
+                if let Some(pos) =
+                    hubs_clone.iter().position(|hub| &hub.title == title)
+                {
+                    let hub = hubs_clone.remove(pos);
+                    hubs_clone.insert(0, hub); // Insert the hub at the beginning of the Vec
                 }
-                None => new_hubs.push(hub.to_owned()),
             }
         }
-        item.set_children_mut(&mut new_hubs);
+
+        *item.children_mut() = hubs_clone;
         item
     }
 }
@@ -372,7 +323,7 @@ pub struct LibraryMixTransform {
 //     limit: i32,
 //     original_limit: i32,
 //     client: PlexClient,
-// ) -> anyhow::Result<MediaContainerWrapper<MediaContainer>> {
+// ) -> anyhow::Result<MediaContainer> {
 //     let config: Config = Config::figment().extract().unwrap();
 //     let mut c = client
 //         .get_collection_children(id, Some(offset), Some(limit))
@@ -415,52 +366,39 @@ impl Transform for LibraryMixTransform {
         &self,
         mut item: MediaContainer,
         plex_client: PlexClient,
-        options: PlexContext,
+        _options: PlexContext,
     ) -> MediaContainer {
-        let config: Config = Config::figment().extract().unwrap();
+        tracing::info!("LibraryMixTransform");
+
         let mut children: Vec<MetaData> = vec![];
         let mut total_size = 0;
 
         for id in self.collection_ids.clone() {
-            let mut c = plex_client
-                .clone()
-                .get_cached(
-                    plex_client.get_collection_children(
-                        id as i64,
-                        Some(self.offset),
-                        Some(self.limit),
-                    ),
-                    format!(
-                        "get_collection_children:{}:{}:{}",
-                        id, self.offset, self.limit
-                    ),
-                )
-                .await
-                .unwrap();
+            let mut c = CollectionChildren::get(
+                &plex_client,
+                id as i64,
+                Some(self.offset),
+                Some(self.limit),
+            )
+            .await
+            .unwrap();
 
-            let collection = plex_client
-                .clone()
-                .get_cached(
-                    plex_client.get_collection(id as i32),
-                    format!("collection:{}", id.to_string()),
-                )
-                .await
-                .unwrap();
+            let collection =
+                Collection::get(&plex_client, id as i64).await.unwrap();
 
-            if collection.media_container.exclude_watched() {
-                c.media_container.children_mut().retain(|x| !x.is_watched());
+            if collection.exclude_watched() {
+                c.children_mut().retain(|x| !x.is_watched());
             }
 
-            total_size += c.media_container.children().len() as i32;
+            total_size += c.children().len() as i32;
 
-            match children.is_empty() {
-                false => {
-                    children = children
-                        .into_iter()
-                        .interleave(c.media_container.children())
-                        .collect::<Vec<MetaData>>();
-                }
-                true => children.append(&mut c.media_container.children()),
+            if !children.is_empty() {
+                children = children
+                    .into_iter()
+                    .interleave(c.children())
+                    .collect::<Vec<MetaData>>();
+            } else {
+                children.append(&mut c.children());
             }
         }
         item.total_size = Some(total_size);
@@ -480,8 +418,8 @@ impl Transform for HubChildrenLimitTransform {
     async fn transform_metadata(
         &self,
         item: &mut MetaData,
-        plex_client: PlexClient,
-        options: PlexContext,
+        _plex_client: PlexClient,
+        _options: PlexContext,
     ) {
         let len = self.limit as usize;
         if item.is_collection_hub() {
@@ -497,150 +435,6 @@ pub struct HubStyleTransform {
     pub is_home: bool, // use clip instead of hero for android
 }
 
-pub struct ClientHeroStyle {
-    enabled: bool,
-    r#type: String,
-    style: Option<String>,
-    child_type: Option<String>,
-    cover_art_as_thumb: bool, // if we should return the coverart in the thumb field
-    cover_art_as_art: bool, // if we should return the coverart in the art field
-}
-
-impl Default for ClientHeroStyle {
-    fn default() -> Self {
-        Self {
-            enabled: true,
-            style: Some("hero".to_string()),
-            r#type: "mixed".to_string(),
-            child_type: None,
-            cover_art_as_thumb: true,
-            cover_art_as_art: false,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum DeviceType {
-    Tv,
-    Mobile,
-}
-
-impl DeviceType {
-    pub fn from_product(product: String) -> DeviceType {
-        match product.to_lowercase() {
-            x if x.contains("(tv)") => DeviceType::Tv,
-            _ => DeviceType::Mobile,
-        }
-    }
-}
-
-impl ClientHeroStyle {
-    pub fn from_context(context: PlexContext) -> Self {
-        // pub fn android(product: String, platform_version: String) -> Self {
-        let product = context.product.clone().unwrap_or_default();
-        let device_type = DeviceType::from_product(product);
-        let platform = context.platform.clone();
-        let platform_version =
-            context.platform_version.clone().unwrap_or_default();
-
-        match platform {
-            Platform::Android => {
-                match device_type {
-                    DeviceType::Tv => {
-                      Self {
-                          style: Some("hero".to_string()),
-                          // clip wil make the item info disappear on TV
-                          r#type: "mixed".to_string(),
-                          // using clip makes it load thumbs instead of art as cover art. So we don't have to touch the background
-                          child_type: Some("clip".to_string()),
-                          cover_art_as_art: false,
-                          cover_art_as_thumb: true,
-                          ..ClientHeroStyle::default()
-                      }
-                    }
-                    _ => Self {
-                        style: None,
-                        r#type: "clip".to_string(),
-                        child_type: Some("clip".to_string()),
-                        cover_art_as_art: true,
-                        ..ClientHeroStyle::default()
-                    },
-                }
-            }
-            Platform::Roku => ClientHeroStyle::roku(),
-            Platform::Ios => ClientHeroStyle::ios_style(),
-            Platform::TvOS => ClientHeroStyle::tvos_style(),
-            _ => {
-              ClientHeroStyle::default()
-          }
-            // _ => {
-            //     if product.starts_with("Plex HTPC") {
-            //         ClientHeroStyle::htpc_style()
-            //     } else {
-            //         match product.to_lowercase().as_ref() {
-            //             "plex for lg" => ClientHeroStyle::htpc_style(),
-            //             "plex for xbox" => ClientHeroStyle::htpc_style(),
-            //             "plex for ps4" => ClientHeroStyle::htpc_style(),
-            //             "plex for ps5" => ClientHeroStyle::htpc_style(),
-            //             "plex for ios" => ClientHeroStyle::ios_style(),
-            //             _ => ClientHeroStyle::default(),
-            //         }
-            //     }
-            // }
-        }
-    }
-
-    pub fn roku() -> Self {
-        Self {
-            style: Some("hero".to_string()),
-            ..ClientHeroStyle::default()
-        }
-    }
-
-    pub fn htpc_style() -> Self {
-        Self {
-            ..ClientHeroStyle::default()
-        }
-    }
-
-    pub fn ios_style() -> Self {
-        Self {
-            cover_art_as_art: true,
-            cover_art_as_thumb: false, // ios doesnt load the subview as hero.
-            ..ClientHeroStyle::default()
-        }
-    }
-
-    pub fn tvos_style() -> Self {
-      Self {
-          cover_art_as_art: true,
-          cover_art_as_thumb: false, // ios doesnt load the subview as hero.
-          ..ClientHeroStyle::default()
-      }
-  }
-
-    // pub fn for_client(platform: Platform, product: String, platform_version: String) -> Self {
-    //     match platform {
-    //         Platform::Android => PlatformHeroStyle::android(product, platform_version),
-    //         Platform::Roku => PlatformHeroStyle::roku(product),
-    //         _ => {
-    //             if product.starts_with("Plex HTPC") {
-    //               ClientHeroStyle::htpc_style()
-    //             } else {
-    //                 match product.to_lowercase().as_ref() {
-    //                     "plex for lg" => ClientHeroStyle::htpc_style(),
-    //                     "plex for xbox" => ClientHeroStyle::htpc_style(),
-    //                     "plex for ps4" => ClientHeroStyle::htpc_style(),
-    //                     "plex for ps5" => ClientHeroStyle::htpc_style(),
-    //                     "plex for ios" => ClientHeroStyle::ios_style(),
-    //                     _ => ClientHeroStyle::default(),
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-}
-
 #[async_trait]
 impl Transform for HubStyleTransform {
     async fn transform_metadata(
@@ -649,15 +443,15 @@ impl Transform for HubStyleTransform {
         plex_client: PlexClient,
         options: PlexContext,
     ) {
-        let config: Config = Config::figment().extract().unwrap();
-        let style = item.style.clone().unwrap_or("".to_string()).to_owned();
+        // let config: Config = Config::figment().extract().unwrap();
+        // let style = item.style.clone().unwrap_or("".to_string()).to_owned();
 
         if item.is_hub() {
             // TODO: Check why tries to load non existing collectiin? my guess is no access
             let is_hero =
                 item.is_hero(plex_client.clone()).await.unwrap_or(false);
             if is_hero {
-                let mut style = ClientHeroStyle::from_context(options.clone());
+                let style = ClientHeroStyle::from_context(options.clone());
 
                 item.style = style.style;
 
@@ -700,9 +494,9 @@ impl Transform for HubWatchedTransform {
         &self,
         item: &mut MetaData,
         plex_client: PlexClient,
-        options: PlexContext,
+        _options: PlexContext,
     ) {
-        let config: Config = Config::figment().extract().unwrap();
+        // let config: Config = Config::figment().extract().unwrap();
 
         if item.is_hub() {
             let exclude_watched = item
@@ -714,57 +508,6 @@ impl Transform for HubWatchedTransform {
                 item.children_mut().retain(|x| !x.is_watched());
             }
         }
-    }
-}
-
-pub struct MediaStyleTransform {
-    pub style: Style,
-}
-
-#[async_trait]
-impl Transform for MediaStyleTransform {
-    async fn transform_mediacontainer(
-        &self,
-        mut item: MediaContainer,
-        plex_client: PlexClient,
-        options: PlexContext,
-    ) -> MediaContainer {
-        if self.style == Style::Hero {
-            item.meta = Some(hero_meta());
-        }
-        item
-    }
-
-    async fn transform_metadata(
-        &self,
-        item: &mut MetaData,
-        plex_client: PlexClient,
-        options: PlexContext,
-    ) {
-        if self.style == Style::Hero {
-            let mut style_def = ClientHeroStyle::from_context(options.clone());
-            if style_def.child_type.clone().is_some() {
-                item.r#type = style_def.child_type.clone().unwrap();
-            }
-            let cover_art = item.get_hero_art(plex_client).await;
-            if cover_art.is_some() {
-                // c.art = art.clone();
-                item.images = vec![Image {
-                    r#type: "coverArt".to_string(),
-                    url: cover_art.clone().unwrap(),
-                    alt: Some(item.title.clone()),
-                }];
-                // lots of clients dont listen to the above
-                if style_def.cover_art_as_art {
-                    item.art = cover_art.clone();
-                }
-
-                if style_def.cover_art_as_thumb {
-                    item.thumb = cover_art.clone();
-                }
-            }
-        }
-        // item
     }
 }
 
@@ -784,27 +527,21 @@ impl Transform for CollectionStyleTransform {
         plex_client: PlexClient,
         options: PlexContext,
     ) -> MediaContainer {
-        let mut collection_details = plex_client
-            .clone()
-            .get_cached(
-                plex_client.get_collection(self.collection_ids[0] as i32),
-                format!("collection:{}", self.collection_ids[0].to_string()),
-            )
-            .await;
+        let collection_details =
+            Collection::get(&plex_client, self.collection_ids[0] as i64).await;
 
         if collection_details.is_ok()
             && collection_details
                 .unwrap()
-                .media_container
                 .children()
-                .get(0)
+                .first()
                 .unwrap()
                 .has_label("REPLEXHERO".to_string())
         {
             // let mut futures = FuturesOrdered::new();
             // let now = Instant::now();
 
-            let mut style = ClientHeroStyle::from_context(options.clone());
+            let style = ClientHeroStyle::from_context(options.clone());
 
             item.meta = Some(hero_meta());
 
@@ -840,8 +577,8 @@ impl Filter for WatchedFilter {
     async fn filter_metadata(
         &self,
         item: &mut MetaData,
-        plex_client: PlexClient,
-        options: PlexContext,
+        _plex_client: PlexClient,
+        _options: PlexContext,
     ) -> bool {
         let config: Config = Config::figment().extract().unwrap();
         if config.exclude_watched {
@@ -864,8 +601,8 @@ impl Transform for HubSectionDirectoryTransform {
     async fn transform_metadata(
         &self,
         item: &mut MetaData,
-        plex_client: PlexClient,
-        options: PlexContext,
+        _plex_client: PlexClient,
+        _options: PlexContext,
     ) {
         if item.is_collection_hub() && !item.directory.is_empty() {
             let childs = item.children();
@@ -890,8 +627,8 @@ impl Transform for HubKeyTransform {
     async fn transform_metadata(
         &self,
         item: &mut MetaData,
-        plex_client: PlexClient,
-        options: PlexContext,
+        _plex_client: PlexClient,
+        _options: PlexContext,
     ) {
         // if item.is_hub() {
         //     dbg!(&item.key);
@@ -922,8 +659,8 @@ impl Transform for UserStateTransform {
     async fn transform_metadata(
         &self,
         item: &mut MetaData,
-        plex_client: PlexClient,
-        options: PlexContext,
+        _plex_client: PlexClient,
+        _options: PlexContext,
     ) {
         let config: Config = Config::figment().extract().unwrap();
         if !config.disable_user_state && !config.disable_leaf_count {
@@ -957,8 +694,8 @@ impl Transform for TestTransform {
     async fn transform_mediacontainer(
         &self,
         mut item: MediaContainer,
-        plex_client: PlexClient,
-        options: PlexContext,
+        _plex_client: PlexClient,
+        _options: PlexContext,
     ) -> MediaContainer {
         for i in item.children_mut() {
             for x in i.children_mut() {
@@ -995,7 +732,7 @@ impl Transform for MediaContainerScriptingTransform {
     async fn transform_mediacontainer(
         &self,
         item: MediaContainer,
-        plex_client: PlexClient,
+        _plex_client: PlexClient,
         options: PlexContext,
     ) -> MediaContainer {
         let config: Config = Config::figment().extract().unwrap();
@@ -1003,8 +740,8 @@ impl Transform for MediaContainerScriptingTransform {
             return item;
         }
 
-        let mut media_container: Dynamic = to_dynamic(item).unwrap();
-        let mut context: Dynamic = to_dynamic(options).unwrap();
+        let media_container: Dynamic = to_dynamic(item).unwrap();
+        let context: Dynamic = to_dynamic(options).unwrap();
         let mut engine = Engine::new();
 
         engine
@@ -1018,11 +755,11 @@ impl Transform for MediaContainerScriptingTransform {
         engine
             .run_file_with_scope(&mut scope, config.test_script.unwrap().into())
             .unwrap();
-        let result = from_dynamic::<MediaContainer>(
+
+        from_dynamic::<MediaContainer>(
             &scope.get_value::<Dynamic>("media_container").unwrap(),
         )
-        .unwrap();
-        result
+        .unwrap()
     }
 }
 
@@ -1127,68 +864,3 @@ impl Transform for MediaContainerScriptingTransform {
 //         item
 //     }
 // }
-
-pub fn hero_meta() -> Meta {
-    Meta {
-        r#type: None,
-        // r#type: Some(MetaType {
-        //     active: Some(true),
-        //     r#type: Some("mixed".to_string()),
-        //     title: Some("All".to_string()),
-        // }),
-        // style: Some(Style::Hero.to_string().to_lowercase()),
-        // display_fields: vec![],
-        display_fields: vec![
-            DisplayField {
-                r#type: Some("movie".to_string()),
-                fields: vec![
-                    "title".to_string(),
-                    "originallyAvailableAt".to_string(),
-                ],
-            },
-            DisplayField {
-                r#type: Some("show".to_string()),
-                fields: vec![
-                    "title".to_string(),
-                    "originallyAvailableAt".to_string(),
-                ],
-            },
-            DisplayField {
-                r#type: Some("clip".to_string()),
-                fields: vec![
-                    "title".to_string(),
-                    "originallyAvailableAt".to_string(),
-                ],
-            },
-            DisplayField {
-                r#type: Some("mixed".to_string()),
-                fields: vec![
-                    "title".to_string(),
-                    "originallyAvailableAt".to_string(),
-                ],
-            },
-        ],
-        display_images: vec![
-            DisplayImage {
-                r#type: Some("hero".to_string()),
-                image_type: Some("coverArt".to_string()),
-            },
-            DisplayImage {
-                r#type: Some("mixed".to_string()),
-                image_type: Some("coverArt".to_string()),
-            },
-            DisplayImage {
-                r#type: Some("clip".to_string()),
-                image_type: Some("coverArt".to_string()),
-            },
-            DisplayImage {
-                r#type: Some("movie".to_string()),
-                image_type: Some("coverArt".to_string()),
-            },
-            DisplayImage {
-                r#type: Some("show".to_string()),
-                image_type: Some("coverArt".to_string()),
-            },
-        ],
-    }
-}

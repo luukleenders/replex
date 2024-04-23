@@ -1,2 +1,34 @@
+# Maximum width of each line
 max_width = 80
+# Combine imports from the same module into a single 'use' statement
 merge_imports = true
+# Ensure there's a trailing comma in multi-line lists
+trailing_comma = "Always"
+# Determines the layout of function call arguments.
+fn_call_style = "Block"
+# Controls the layout of function arguments and parameters.
+fn_args_layout = "Tall"
+# Force braces in control flow structures for single line bodies.
+force_explicit_block_return = true
+# Place where clauses after function definitions.
+where_style = "Below"
+# Use Unix-style line endings.
+newline_style = "Unix"
+# Sorts the 'use' statements alphabetically.
+reorder_imports = true
+# Groups imports by their similarity.
+reorder_imports_in_group = true
+# Ensures that each struct's fields are formatted on a separate line.
+struct_lit_single_line = false
+# Sorts the 'mod' statements alphabetically.
+reorder_modules = true
+# Determines if 'else' expression should start on a new line.
+control_brace_style = "AlwaysNextLine"
+# Format code in doc comments.
+format_code_in_doc_comments = true
+# Imports granularity.
+imports_granularity = "Crate"
+# Imports layout.
+imports_layout = "Vertical"
+# Wrap comments at the specified line length.
+wrap_comments = true

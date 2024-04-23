@@ -1,32 +1,120 @@
-extern crate tracing;
+use std::collections::VecDeque;
+
 use anyhow::Result;
-use bytes::Bytes;
-extern crate mime;
-use itertools::Itertools;
-// use futures_util::StreamExt;
+use futures::future::join_all;
 use mime::Mime;
 use multimap::MultiMap;
-use salvo::Error;
-use serde::{Deserialize, Serialize};
-use strum_macros::Display as EnumDisplay;
-use strum_macros::EnumString;
-// use http_body::{Limited, Full};
-use http_body_util::BodyExt;
-use tracing::error;
+use reqwest_retry::{default_on_request_failure, Retryable, RetryableStrategy};
+use salvo::http::HeaderValue;
 use url::Url;
 use yaserde::ser::to_string as to_xml_str;
-// use salvo_core::http::response::Response as SalvoResponse;
-use salvo::http::HeaderValue;
 
 use salvo::http::HeaderMap;
-use salvo::{
-    http::response::Response as SalvoResponse, test::ResponseExt, Extractible,
-    Request as SalvoRequest,
+use salvo::http::ResBody;
+use salvo::Request as SalvoRequest;
+pub type HyperResponse = hyper::Response<ResBody>;
+
+use crate::config::Config;
+use crate::models::{
+    ContentType, DisplayField, DisplayImage, MediaContainer, Meta, MetaData,
 };
+use crate::plex::client::PlexClient;
+use crate::plex::traits::MetaDataChildren;
 
-use crate::models::*;
+struct Retry401;
+impl RetryableStrategy for Retry401 {
+    fn handle(
+        &self,
+        res: &std::result::Result<reqwest::Response, reqwest_middleware::Error>,
+    ) -> Option<Retryable> {
+        match res {
+            Ok(success) if success.status() == 401 => {
+                Some(Retryable::Transient)
+            }
+            Ok(_success) => None,
+            // otherwise do not retry a successful request
+            Err(error) => default_on_request_failure(error),
+        }
+    }
+}
 
+async fn get_last_viewed_at(
+    plex_client: &PlexClient,
+    initial_rating_key: &str,
+) -> Option<i64> {
+    let mut queue = VecDeque::from(vec![initial_rating_key.to_string()]);
 
+    while let Some(rating_key) = queue.pop_front() {
+        let mut children =
+            match MetaDataChildren::get(plex_client, &rating_key).await {
+                Ok(data) => data,
+                Err(_) => continue,
+            };
+
+        // Iterate backwards over the children
+        for child in children.children().iter().rev() {
+            if let Some(last_viewed_at) = child.last_viewed_at {
+                // Early exit since we found a recent watched date
+                return Some(last_viewed_at);
+            }
+
+            // Prepare to recurse only if no last_viewed_at has been found
+            if child.viewed_leaf_count.unwrap_or(0) > 0 {
+                if let Some(rating_key) = &child.rating_key {
+                    queue.push_back(rating_key.clone());
+                }
+            }
+        }
+    }
+
+    None
+}
+
+pub async fn sort_by_last_viewed(
+    plex_client: &PlexClient,
+    items: &mut [MetaData],
+) {
+    let futures: Vec<_> = items
+        .iter_mut()
+        .filter(|item| {
+            item.last_viewed_at.is_none() && item.rating_key.is_some()
+        })
+        .map(|item| {
+            let rating_key = item.rating_key.as_ref().unwrap().clone();
+            async move {
+                // Execute the async function to fetch last viewed at date
+                let last_viewed_at =
+                    get_last_viewed_at(plex_client, &rating_key).await;
+                (item, last_viewed_at)
+            }
+        })
+        .collect();
+
+    // Wait for all futures to complete
+    let results = join_all(futures).await;
+
+    // Update items with the results
+    for (item, last_viewed_at) in results {
+        if let Some(last_viewed_at) = last_viewed_at {
+            item.last_viewed_at = Some(last_viewed_at);
+        }
+    }
+
+    items.sort_by(|a, b| {
+        let a_last_viewed = a.last_viewed_at;
+        let b_last_viewed = b.last_viewed_at;
+
+        if a_last_viewed.is_none() {
+            return std::cmp::Ordering::Greater;
+        }
+
+        if b_last_viewed.is_none() {
+            return std::cmp::Ordering::Less;
+        }
+
+        b_last_viewed.unwrap().cmp(&a_last_viewed.unwrap())
+    });
+}
 
 pub fn get_collection_id_from_child_path(path: String) -> i32 {
     let mut path = path.replace("/library/collections/", "");
@@ -34,7 +122,7 @@ pub fn get_collection_id_from_child_path(path: String) -> i32 {
     path.parse().unwrap()
 }
 
-pub fn get_collection_id_from_hub(hub: &MetaData) -> i32 {
+pub fn get_collection_id_from_hub(hub: &MetaData) -> i64 {
     hub.hub_identifier
         .clone()
         .unwrap()
@@ -45,12 +133,42 @@ pub fn get_collection_id_from_hub(hub: &MetaData) -> i32 {
         .unwrap()
 }
 
+pub fn url_from_request(req: &SalvoRequest) -> Url {
+    let config = Config::load();
+    let base_url = config
+        .host
+        .clone()
+        .expect("Host must be specified in the config");
+
+    let path_and_query = req
+        .uri()
+        .path_and_query()
+        .expect("Path and query required")
+        .as_str();
+
+    let full_url = format!(
+        "{}/{}",
+        base_url.trim_end_matches('/'),
+        path_and_query.trim_start_matches('/')
+    );
+
+    Url::parse(&full_url).expect("Failed to parse full URL")
+}
+
 pub fn replace_query(query: MultiMap<String, String>, req: &mut SalvoRequest) {
-    let mut url = Url::parse(req.uri_mut().to_string().as_str()).unwrap();
+    let mut url = url_from_request(req);
+
+    // Replace existing query parameters with new ones
     url.query_pairs_mut()
         .clear()
-        .extend_pairs(&query.iter().map(|(k, v)| (k, v)).collect_vec());
-    req.set_uri(hyper::Uri::try_from(url.as_str()).unwrap())
+        .extend_pairs(query.iter().map(|(k, v)| (k.as_str(), v.as_str())));
+
+    // Update the request's URI with the new URL
+    if let Ok(new_uri) = hyper::Uri::try_from(url.as_str()) {
+        req.set_uri(new_uri);
+    } else {
+        tracing::error!("Failed to construct a valid URI from modified URL");
+    }
 }
 
 pub fn add_query_param_salvo(
@@ -58,74 +176,41 @@ pub fn add_query_param_salvo(
     param: String,
     value: String,
 ) {
-    // let mut uri = pathetic::Uri::default()
-    //     .with_path(req.uri_mut().path())
-    //     .with_query(req.uri_mut().query());
-    // let mut uri =
-    //     pathetic::Uri::new(req.uri_mut().to_string().as_str()).unwrap();
-    let mut url = Url::parse(req.uri_mut().to_string().as_str()).unwrap();
-    let mut query: Vec<(String, String)> = url // remove existing values
-        .query_pairs()
-        .filter(|(name, _)| name.to_string() != param.to_string())
-        .map(|(name, value)| (name.into_owned(), value.into_owned()))
-        .collect();
-    query.push((param.to_owned(), value.to_owned()));
-    url.query_pairs_mut().clear().extend_pairs(&query);
-    // dbg!(&url.as_str());
-    // dbg!(uri.host());
-    //*req.uri_mut() = hyper::Uri::try_from(url.as_str()).unwrap();
-    req.set_uri(hyper::Uri::try_from(url.as_str()).unwrap())
-    // req
-}
+    let mut url = url_from_request(req);
 
-#[derive(
-    Debug, Clone, PartialEq, Eq, EnumString, EnumDisplay, Serialize, Deserialize,
-)]
-pub enum ContentType {
-    #[strum(serialize = "application/json", serialize = "text/json")]
-    Json,
-    #[strum(
-        serialize = "text/xml;charset=utf-8",
-        serialize = "application/xml"
-    )]
-    Xml,
-}
+    // Modify the query as needed
+    url.query_pairs_mut().append_pair(&param, &value);
 
-impl Default for ContentType {
-    fn default() -> Self {
-        ContentType::Xml
+    // Update the request's URI with the new query
+    if let Ok(new_uri) = hyper::Uri::try_from(url.as_str()) {
+        req.set_uri(new_uri);
+    } else {
+        tracing::error!("Failed to construct a valid URI from modified URL");
     }
 }
 
 pub fn get_content_type_from_headers(
     headers: &HeaderMap<HeaderValue>,
 ) -> ContentType {
-    let default_header_value =
+    // Define a static header value for fallback
+    static DEFAULT_HEADER_VALUE: HeaderValue =
         HeaderValue::from_static("text/xml;charset=utf-8");
-    let accept_header = headers.get("accept");
-    let content_type_header = headers.get("content-type");
 
-    let content_type = if content_type_header.is_some() {
-        content_type_header.unwrap()
-    } else if accept_header.is_some() {
-        accept_header.unwrap()
+    // Try to extract either 'content-type' or 'accept' headers
+    let content_type_str = headers
+        .get("content-type")
+        .or_else(|| headers.get("accept"))
+        .unwrap_or(&DEFAULT_HEADER_VALUE) // Directly reference the static value
+        .to_str()
+        .unwrap_or("text/xml;charset=utf-8"); // Default to XML if header can't be converted to a string
+
+    // Determine content type based on header string
+    if content_type_str.contains("application/json") {
+        ContentType::Json
     } else {
-        &default_header_value
-    }
-    .to_str()
-    .unwrap();
-
-    match content_type {
-        x if x.contains("application/json") => ContentType::Json,
-        x if x.contains("text/xml") => ContentType::Xml,
-        _ => ContentType::Xml,
+        ContentType::Xml
     }
 }
-
-// pub fn get_content_type(req: Request<Body>) -> ContentType {
-//     let (parts, _body) = req.into_parts();
-//     get_content_type_from_headers(&parts.headers)
-// }
 
 pub fn mime_to_content_type(mime: Mime) -> ContentType {
     match (mime.type_(), mime.subtype()) {
@@ -135,66 +220,102 @@ pub fn mime_to_content_type(mime: Mime) -> ContentType {
     }
 }
 
-pub fn from_string(
-    string: String,
-    content_type: mime::Mime,
-) -> Result<MediaContainerWrapper<MediaContainer>> {
-    // dbg!(&string);
-    // dbg!(&content_type.subtype());
-    let result: MediaContainerWrapper<MediaContainer> =
-        match (content_type.type_(), content_type.subtype()) {
-            (_, mime::JSON) => {
-                let mut c: MediaContainerWrapper<MediaContainer> =
-                    serde_json::from_str(&string).unwrap();
-                c.content_type = ContentType::Json;
-                c
-            }
-            _ => MediaContainerWrapper {
-                // default to xml
-                // media_container: from_xml_str(&body_string).unwrap(),
-                media_container: yaserde::de::from_str(&string).unwrap(),
-                content_type: ContentType::Xml,
+pub fn hero_meta() -> Meta {
+    Meta {
+        r#type: None,
+        // r#type: Some(MetaType {
+        //     active: Some(true),
+        //     r#type: Some("mixed".to_string()),
+        //     title: Some("All".to_string()),
+        // }),
+        // style: Some(Style::Hero.to_string().to_lowercase()),
+        // display_fields: vec![],
+        display_fields: vec![
+            DisplayField {
+                r#type: Some("movie".to_string()),
+                fields: vec![
+                    "title".to_string(),
+                    "originallyAvailableAt".to_string(),
+                ],
             },
-            // _ => "attachment",
-        };
-    Ok(result)
+            DisplayField {
+                r#type: Some("show".to_string()),
+                fields: vec![
+                    "title".to_string(),
+                    "originallyAvailableAt".to_string(),
+                ],
+            },
+            DisplayField {
+                r#type: Some("clip".to_string()),
+                fields: vec![
+                    "title".to_string(),
+                    "originallyAvailableAt".to_string(),
+                ],
+            },
+            DisplayField {
+                r#type: Some("mixed".to_string()),
+                fields: vec![
+                    "title".to_string(),
+                    "originallyAvailableAt".to_string(),
+                ],
+            },
+        ],
+        display_images: vec![
+            DisplayImage {
+                r#type: Some("hero".to_string()),
+                image_type: Some("coverArt".to_string()),
+            },
+            DisplayImage {
+                r#type: Some("mixed".to_string()),
+                image_type: Some("coverArt".to_string()),
+            },
+            DisplayImage {
+                r#type: Some("clip".to_string()),
+                image_type: Some("coverArt".to_string()),
+            },
+            DisplayImage {
+                r#type: Some("movie".to_string()),
+                image_type: Some("coverArt".to_string()),
+            },
+            DisplayImage {
+                r#type: Some("show".to_string()),
+                image_type: Some("coverArt".to_string()),
+            },
+        ],
+    }
 }
 
-pub async fn from_reqwest_response(
-    res: reqwest::Response,
-) -> Result<MediaContainerWrapper<MediaContainer>, Error> {
-    let bytes = res.bytes().await.unwrap();
-    from_bytes(bytes)
-}
-
-pub async fn from_hyper_response(
-    res: HyperResponse,
-) -> Result<MediaContainerWrapper<MediaContainer>, Error> {
-    let bytes = res.into_body().collect().await.unwrap().to_bytes();
-    from_bytes(bytes)
-}
-
-pub async fn from_salvo_response(
-    mut res: SalvoResponse,
-) -> Result<MediaContainerWrapper<MediaContainer>, Error> {
-    let bytes = res.take_bytes(None).await.unwrap();
-    from_bytes(bytes)
-}
-
-pub fn from_bytes(
-    bytes: bytes::Bytes,
-) -> Result<MediaContainerWrapper<MediaContainer>, Error> {
-    let deserializer = &mut serde_json::Deserializer::from_reader(&*bytes);
-    serde_path_to_error::deserialize(deserializer).map_err(Error::other)
-}
+// pub fn from_string(
+//     string: String, content_type: mime::Mime,
+// ) -> Result<MediaContainer> {
+//     // dbg!(&string);
+//     // dbg!(&content_type.subtype());
+//     let result: MediaContainer =
+//         match (content_type.type_(), content_type.subtype()) {
+//             (_, mime::JSON) => {
+//                 let mut c: MediaContainer =
+//                     serde_json::from_str(&string).unwrap();
+//                 c.content_type = ContentType::Json;
+//                 c
+//             }
+//             _ => MediaContainerWrapper {
+//                 // default to xml
+//                 // media_container: from_xml_str(&body_string).unwrap(),
+//                 media_container: yaserde::de::from_str(&string).unwrap(),
+//                 content_type: ContentType::Xml,
+//             },
+//             // _ => "attachment",
+//         };
+//     Ok(result)
+// }
 
 // pub fn from_bytes(
 //     bytes: bytes::Bytes,
 //     content_type: ContentType,
-// ) -> Result<MediaContainerWrapper<MediaContainer>, Error> {
-//     let result: MediaContainerWrapper<MediaContainer> = match content_type {
+// ) -> Result<MediaContainer, Error> {
+//     let result: MediaContainer = match content_type {
 //         ContentType::Json => {
-//             let mut c: MediaContainerWrapper<MediaContainer> =
+//             let mut c: MediaContainer =
 //                 serde_json::from_reader(&*bytes).expect("Expected proper json");
 //             c.content_type = ContentType::Json;
 //             c
@@ -211,7 +332,7 @@ pub fn from_bytes(
 // TODO: use body not string
 // pub async fn from_response(
 //     mut res: SalvoResponse,
-// ) -> Result<MediaContainerWrapper<MediaContainer>> {
+// ) -> Result<MediaContainer> {
 //     // let content_type = get_content_type_from_headers(res.headers_mut());
 //     let content_type = res.content_type().unwrap();
 //     // let bytes = res.take_bytes(res.content_type().as_ref()).await.unwrap();
@@ -223,7 +344,7 @@ pub fn from_bytes(
 //         Ok(result) => result,
 //         Err(error) => {
 //             error!("Problem deserializing: {:?}", error);
-//             let container: MediaContainerWrapper<MediaContainer> = MediaContainerWrapper::default();
+//             let container: MediaContainer = MediaContainerWrapper::default();
 //             container // TOOD: Handle this higher up
 //         }
 //     };
@@ -231,13 +352,13 @@ pub fn from_bytes(
 // }
 
 pub async fn to_string(
-    container: MediaContainerWrapper<MediaContainer>,
+    container: MediaContainer,
     content_type: &ContentType,
 ) -> Result<String> {
     match content_type {
         ContentType::Json => Ok(serde_json::to_string(&container).unwrap()),
         // ContentType::Xml => Ok("".to_owned()),
-        ContentType::Xml => Ok(to_xml_str(&container.media_container).unwrap()),
+        ContentType::Xml => Ok(to_xml_str(&container).unwrap()),
     }
 }
 
@@ -256,6 +377,6 @@ pub fn merge_children_keys(
     format!(
         "/library/collections/{},{}/children",
         key_left,
-        key_right // order is important. As thhis order is used to generated the library collections
+        key_right // order is important. As this order is used to generated the library collections
     )
 }
