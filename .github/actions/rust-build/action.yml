@@ -27,7 +27,7 @@ runs:
 
     - name: Build Rust project
       run: |
-        cargo build --release
+        cargo build
         mkdir -p bin/x86_64-unknown-linux-gnu
         cp target/release/replex bin/x86_64-unknown-linux-gnu/
       shell: bash
