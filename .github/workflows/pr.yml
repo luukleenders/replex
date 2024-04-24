@@ -30,25 +30,3 @@ jobs:
       with:
         tag: ${{ steps.sanitised.outputs.dockerTag }}
         token: ${{ secrets.REPLEX_PAT }}
-
-  draft_release:
-    name: Draft release
-    needs: build_and_push
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Release drafter
-        id: release-drafter
-        uses: ./.github/workflows/release-drafter.yml
-
-      - name: Comment release notes
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          recreate: true
-          message: |
-            ## Release notes
-            Draft of release notes have been updated, please review and merge when ready.
-
-            ${{ steps.release-drafter.outputs.body }}
-
-    
