@@ -48,7 +48,7 @@ pub async fn handler(
 fn adjust_query_params(
     req: &mut Request,
     params: &PlexContext,
-    config: &Config,
+    _config: &Config,
 ) {
     if let Some(pinned_id) = &params.pinned_content_directory_id {
         let pinned_ids = pinned_id.iter().join(",");

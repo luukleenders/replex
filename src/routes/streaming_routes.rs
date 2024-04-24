@@ -32,8 +32,7 @@ async fn redirect_stream(req: &mut Request, res: &mut Response) {
     let redirect_url = config
         .redirect_streams_host
         .clone()
-        .or_else(|| config.host.clone()) // Use the host as a fallback if redirect_streams_host is None
-        .expect("Config must contain a host or redirect_streams_host"); // Safely assume we have a host because of earlier checks
+        .or_else(|| Some(config.host.clone()));
 
     let path_and_query = req
         .uri()
@@ -41,7 +40,7 @@ async fn redirect_stream(req: &mut Request, res: &mut Response) {
         .expect("Request must have a path and query")
         .as_str(); // Safely extract the string representation
 
-    let redirect_url = format!("{}{}", redirect_url, path_and_query);
+    let redirect_url = format!("{:?}{}", redirect_url, path_and_query);
 
     let mime = mime_guess::from_path(req.uri().path()).first_or_octet_stream();
     res.headers_mut()

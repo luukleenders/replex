@@ -14,7 +14,7 @@ use crate::deserializers::{
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct Config {
     #[serde(deserialize_with = "deserialize_host")]
-    pub host: Option<String>,
+    pub host: String,
 
     pub port: Option<u64>,
 
@@ -77,12 +77,6 @@ pub struct Config {
 
     pub test_script: Option<String>,
 }
-
-// #[derive(Debug, Default, PartialEq, Deserialize)]
-// pub struct Settings {
-//     #[serde(default)]
-//     init: Option<String>,
-// }
 
 impl Config {
     fn figment() -> Figment {

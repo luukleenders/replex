@@ -149,19 +149,15 @@ where
     })
 }
 
-pub fn deserialize_host<'de, D>(
-    deserializer: D,
-) -> Result<Option<String>, D::Error>
+pub fn deserialize_host<'de, D>(deserializer: D) -> Result<String, D::Error>
 where
     D: Deserializer<'de>,
 {
-    let host: Option<String> = Deserialize::deserialize(deserializer)?;
-    Ok(host.map(|mut s| {
-        if s.ends_with('/') {
-            s.pop();
-        }
-        s
-    }))
+    let mut host: String = Deserialize::deserialize(deserializer)?;
+    if host.ends_with('/') {
+        host.pop();
+    }
+    Ok(host)
 }
 
 pub fn bool_from_int<'de, D>(deserializer: D) -> Result<bool, D::Error>
