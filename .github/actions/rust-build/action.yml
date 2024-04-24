@@ -1,4 +1,4 @@
-name: 'Rust Build'
+name: Rust build
 description: 'Builds the Rust project'
 
 inputs: {}
@@ -10,7 +10,7 @@ runs:
       run: rustup update && rustup component add rustfmt clippy
       shell: bash
 
-    - name: Cache Cargo Registry
+    - name: Cache Cargo registry
       uses: actions/cache@v4
       with:
         path: |
@@ -18,7 +18,7 @@ runs:
           ~/.cargo/git
         key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
         
-    - name: Cache Cargo Build Output
+    - name: Cache Cargo build output
       uses: actions/cache@v4
       with:
         path: |

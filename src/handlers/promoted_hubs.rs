@@ -5,10 +5,8 @@ use crate::config::Config;
 use crate::models::{MediaContainer, Platform, WrappedMediaContainer};
 use crate::plex::client::PlexClient;
 use crate::plex::models::PlexContext;
-use crate::transforms::{
-    ExcludeWatchedTransform, HubKeyTransform, SectionDirectoryTransform,
-    TransformBuilder,
-};
+use crate::transforms::{HubKeyTransform, TransformBuilder};
+// use crate::transforms::{SectionDirectoryTransform, ExcludeWatchedTransform};
 use crate::utils::*;
 
 use crate::transforms::{
@@ -60,7 +58,7 @@ pub async fn handler(
 fn adjust_query_params(
     req: &mut Request,
     params: &PlexContext,
-    config: &Config,
+    _config: &Config,
 ) {
     if let Some(pinned_id) = &params.pinned_content_directory_id {
         let pinned_ids = pinned_id.iter().join(",");
@@ -76,7 +74,7 @@ fn adjust_query_params(
 
     // Adjust 'count' based on platform, config, etc.
     let mut count = params.count.unwrap_or(25);
-    let mut count = 10;
+    // let mut count = 10;
 
     if params.platform == Platform::Android {
         count = 50; // Android-specific adjustment
@@ -120,7 +118,7 @@ async fn fetch_and_transform_upstream_data(
         // .with_transform(SectionDirectoryTransform)
         .with_transform(HubMixTransform)
         .with_transform(ReorderHubsTransform)
-        // .with_transform(HubStyleTransform { is_home: true })
+        .with_transform(HubStyleTransform { is_home: true })
         // .with_transform(ExcludeWatchedTransform)
         .with_transform(HubKeyTransform)
         .apply_to(&mut container)

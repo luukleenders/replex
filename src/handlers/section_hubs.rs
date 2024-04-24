@@ -40,7 +40,7 @@ pub async fn handler(
 fn adjust_query_params(
     req: &mut Request,
     params: &PlexContext,
-    config: &Config,
+    _config: &Config,
 ) {
     // Always include GUIDs for banners.
     add_query_param_salvo(req, "includeGuids".to_string(), "1".to_string());

@@ -424,7 +424,7 @@ impl MediaContainer {
     }
 
     pub fn exclude_watched(&self) -> bool {
-        let config = Config::load();
+        let _config = Config::load();
 
         // if config.exclude_watched {
         //     return true;
