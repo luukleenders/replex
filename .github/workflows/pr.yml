@@ -29,6 +29,7 @@ jobs:
       uses: ./.github/actions/docker-build-and-push
       with:
         tag: ${{ steps.sanitised.outputs.dockerTag }}
+        token: ${{ secrets.REPLEX_PAT }}
 
   draft_release:
     name: Draft release
