@@ -13,7 +13,7 @@ categories:
   - title: '🐛 Bug Fixes'
     label: bugfix
   - title: '🧹 Chores'
-    collapse-after: 1
+    collapse-after: 2
     label: chore
 
 version-resolver:
