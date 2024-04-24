@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
@@ -20,5 +22,7 @@ jobs:
 
     - name: Release Drafter
       uses: release-drafter/release-drafter@v6
+      with:
+        commitish: refs/heads/main
       env:
         GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
