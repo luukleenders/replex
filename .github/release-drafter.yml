@@ -12,11 +12,8 @@ categories:
     label: feature
   - title: '🐛 Bug Fixes'
     label: bugfix
-  - title: '🧪 Test'
-    collapse-after: 1
-    label: test
   - title: '🧹 Chores'
-    collapse-after: 1
+    collapse-after: 2
     label: chore
 
 version-resolver:
@@ -32,17 +29,12 @@ version-resolver:
   default: patch
 
 autolabeler:
-  - label: 'bugfix'
+  - label: 'chore'
     branch:
-      - '/bugfix\/.+/'
+      - '/chore\/.+/'
+  - label: 'fix'
+    branch:
       - '/fix\/.+/'
   - label: 'feature'
     branch:
       - '/feature\/.+/'
-      - '/feat\/.+/'
-  - label: 'test'
-    branch:
-      - '/test\/.+/'
-  - label: 'chore'
-    branch:
-      - '/chore\/.+/'
