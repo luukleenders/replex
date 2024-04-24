@@ -1,0 +1,25 @@
+name: Release
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  build_and_push:
+    name: Build and push Docker image
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Rust build
+      uses: ./.github/actions/rust-build
+
+    - name: Docker build and push
+      uses: ./.github/actions/docker-build-and-push
+      with:
+        tag: "develop"
+        token: ${{ secrets.REPLEX_PAT }}
