@@ -1,4 +1,4 @@
-name: PR Workflow
+name: Pull Request
 
 on:
   pull_request:
@@ -10,6 +10,7 @@ env:
 permissions:
   contents: read
   packages: read
+  pull-requests: write
 
 jobs:
   build_and_push:
