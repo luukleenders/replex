@@ -15,8 +15,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Rust build
-      uses: ./.github/actions/rust-build
+    - name: Rust build (dry run)
+      uses: rust-build/rust-build.action@v1.4.5
+      with:
+        RUSTTARGET: x86_64-unknown-linux-gnu
+        UPLOAD_MODE: none
+      env:
+        GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
 
     - name: Docker build and push
       uses: ./.github/actions/docker-build-and-push
