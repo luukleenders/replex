@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   get-next-version:
+    name: Get next release version
     uses: semantic-release-action/next-release-version/.github/workflows/next-release-version.yml@v4
 
   update_release_draft:
@@ -33,7 +34,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
 
   update_cargo_toml:
-    name: Update release draft
+    name: Update Cargo toml
     runs-on: ubuntu-latest
     needs:
       - get-next-version
