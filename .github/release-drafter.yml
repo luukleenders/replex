@@ -7,9 +7,6 @@ template: |
 
   $CHANGES
 
-  ## Docker Tags
-  ${{ env.DOCKER_METADATA_OUTPUT_TAGS }}
-
 categories:
   - title: '🚀 Features'
     label: feature
@@ -35,9 +32,11 @@ autolabeler:
   - label: 'chore'
     branch:
       - '/chore\/.+/'
-  - label: 'fix'
+  - label: 'bugfix'
     branch:
       - '/fix\/.+/'
+      - '/bugfix\/.+/'
   - label: 'feature'
     branch:
+      - '/feat\/.+/'
       - '/feature\/.+/'
