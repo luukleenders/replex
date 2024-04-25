@@ -21,5 +21,4 @@ jobs:
     - name: Docker build and push
       uses: ./.github/actions/docker-build-and-push
       with:
-        tag: "develop"
         token: ${{ secrets.REPLEX_PAT }}

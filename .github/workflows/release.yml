@@ -1,0 +1,27 @@
+name: Release
+
+on:
+  release:
+    types: [released]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build_and_release:
+    name: Build, release and publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust build
+        uses: ./.github/actions/rust-build
+        with:
+          build-flags: '--release'
+
+      - name: Bocker build and push
+        uses: ./.github/actions/docker-build-and-push
+        with:
+          token: ${{ secrets.REPLEX_PAT }}
