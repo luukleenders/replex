@@ -16,16 +16,38 @@ jobs:
   build_and_push:
     name: Build and push Docker image
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform:
+          - release_for: x86_64 Linux
+            os: ubuntu-22.04
+            docker: linux/amd64
+            target: x86_64-unknown-linux-gnu
+            bin: replex
+            name: x86_64-unknown-linux-gnu.tar.gz
+            command: build
+
+
     steps:
     - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
     
-    - name: Rust build (dry run)
-      uses: rust-build/rust-build.action@v1.4.5
+    - name: Cache cargo & target directories
+      uses: Swatinem/rust-cache@v2
       with:
-        RUSTTARGET: x86_64-unknown-linux-musl
-        UPLOAD_MODE: none
-      env:
-        GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
+        save-if: "${{ github.ref == 'refs/heads/master' || github.event_name == 'pull_request' }}"
+
+    - name: Build binary
+      uses: houseabsolute/actions-rust-cross@v0
+      with:
+        command: ${{ matrix.platform.command }}
+        target: ${{ matrix.platform.target }}
+
+    - name: Move bin
+      shell: bash
+      run: |
+        mkdir -p bin/${{ matrix.platform.target }}
+        mv target/${{ matrix.platform.target }}/release/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
 
     - name: Docker build and push
       uses: ./.github/actions/docker-build-and-push
