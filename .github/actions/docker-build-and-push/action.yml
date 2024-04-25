@@ -55,7 +55,8 @@ runs:
 
     - name: Prepare release notes
       run: |
-        echo "DOCKER_TAGS=${{ steps.meta.outputs.tags }}" >> $GITHUB_ENV
+        DOCKER_TAGS="${{ steps.meta.outputs.json }}"
+        echo "DOCKER_TAGS=$(echo "$DOCKER_TAGS" | tr '\n' ', ')" >> $GITHUB_ENV
       shell: bash
 
     - name: Move cache
