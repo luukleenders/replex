@@ -26,7 +26,6 @@ jobs:
             name: x86_64-unknown-linux-gnu.tar.gz
             command: build
 
-
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
