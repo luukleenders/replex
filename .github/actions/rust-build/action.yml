@@ -25,5 +25,9 @@ runs:
       run: |
         cargo build ${{ inputs.build-flags }}
         mkdir -p bin/x86_64-unknown-linux-gnu
-        cp target/release/replex bin/x86_64-unknown-linux-gnu/
+        if [ inputs.build-flags == '--release' ]; then
+          cp target/release/replex bin/x86_64-unknown-linux-gnu/
+        else
+          cp target/debug/replex bin/x86_64-unknown-linux-gnu/
+        fi
       shell: bash
