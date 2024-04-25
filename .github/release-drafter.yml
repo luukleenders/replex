@@ -8,7 +8,7 @@ template: |
   $CHANGES
 
   ## Docker Tags
-  ${{ env.DOCKER_TAGS }}
+  ${{ env.DOCKER_METADATA_OUTPUT_TAGS }}
 
 categories:
   - title: '🚀 Features'
