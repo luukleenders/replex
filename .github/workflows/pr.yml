@@ -26,15 +26,3 @@ jobs:
       uses: ./.github/actions/docker-build-and-push
       with:
         token: ${{ secrets.REPLEX_PAT }}
-
-    - name: Comment Docker image URL
-      uses: marocchino/sticky-pull-request-comment@v2
-      with:
-        recreate: true
-        message: |
-          ## Docker Image URL
-          A new Docker image has been built and pushed to the registry. You can pull it using the following command:
-          ```sh
-          docker pull ghcr.io/${{ github.repository }}:${{ env.DOCKER_TAG }}
-          ```
-          The image is available at [ghcr.io/${{ github.repository }}:${{ env.DOCKER_TAG }}](https://ghcr.io/${{ github.repository }}:${{ env.DOCKER_TAG }}).
