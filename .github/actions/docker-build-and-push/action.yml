@@ -53,6 +53,11 @@ runs:
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new
 
+    - name: Prepare release notes
+      run: |
+        echo "DOCKER_TAGS=${{ steps.meta.outputs.tags }}" >> $GITHUB_ENV
+      shell: bash
+
     - name: Move cache
       shell: bash
       run: |
