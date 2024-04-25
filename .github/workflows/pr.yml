@@ -47,7 +47,7 @@ jobs:
       shell: bash
       run: |
         mkdir -p bin/${{ matrix.platform.target }}
-        mv target/${{ matrix.platform.target }}/release/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
+        mv target/${{ matrix.platform.target }}/debug/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
 
     - name: Docker build and push
       uses: ./.github/actions/docker-build-and-push
