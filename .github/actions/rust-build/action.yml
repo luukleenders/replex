@@ -14,20 +14,12 @@ runs:
       run: rustup update && rustup component add rustfmt clippy
       shell: bash
 
-    - name: Cache Cargo registry
-      uses: actions/cache@v4
+    - name: Cache Cargo registry and build output
+      uses: Swatinem/rust-cache@v2
       with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-        
-    - name: Cache Cargo build output
-      uses: actions/cache@v4
-      with:
-        path: |
-          target
-        key: ${{ runner.os }}-cargo-build-output-${{ hashFiles('**/Cargo.lock') }}
+        cache-targets: true
+        cache-on-failure: true
+        save-if: "${{ github.ref == 'refs/heads/master' || github.event_name == 'pull_request' }}"
 
     - name: Build Rust project
       run: |
