@@ -8,10 +8,16 @@ on:
     types: [opened, synchronize, reopened]
 
 permissions:
-  contents: read
+  contents: write
+  packages: write
 
 jobs:
+  get-next-version:
+    name: Get next release version
+    uses: semantic-release-action/next-release-version/.github/workflows/next-release-version.yml@v4
+
   update_release_draft:
+    name: Update release draft
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -26,3 +32,19 @@ jobs:
         commitish: refs/heads/main
       env:
         GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
+
+  update_cargo_toml:
+    name: Update Cargo toml
+    runs-on: ubuntu-latest
+    needs:
+      - get-next-version
+    
+    if: needs.get-next-version.outputs.new-release-published == 'true'
+    steps:
+      - name: Install semantic-release-cargo
+        uses: taiki-e/install-action@v2
+        with:
+          tool: semantic-release-cargo@2
+
+      - name: Prepare semantic-release for Rust
+        run: semantic-release-cargo prepare ${{ needs.get-next-version.outputs.new-release-version }}

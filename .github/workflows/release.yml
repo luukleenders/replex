@@ -9,15 +9,10 @@ permissions:
   packages: write
 
 jobs:
-  get-next-version:
-    uses: semantic-release-action/next-release-version/.github/workflows/next-release-version.yml@v4
-
   build:
-    runs-on: ${{ matrix.platform.os }}
-    needs: 
-      - get-next-version
-
     name: Build - ${{ matrix.platform.release_for }}
+    runs-on: ${{ matrix.platform.os }}
+    
     strategy:
       matrix:
         platform:
@@ -67,14 +62,6 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.platform.target }}
-
-      - name: Install semantic-release-cargo
-        uses: taiki-e/install-action@v2
-        with:
-          tool: semantic-release-cargo@2
-
-      - name: Prepare semantic-release for Rust
-        run: semantic-release-cargo prepare ${{ needs.get-next-version.outputs.new-release-version }}
 
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v0
