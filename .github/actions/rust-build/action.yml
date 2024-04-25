@@ -1,7 +1,11 @@
 name: Rust build
 description: 'Builds the Rust project'
 
-inputs: {}
+inputs:
+  build-flags:
+    description: 'Flags to pass to the `cargo build` command'
+    required: false
+    default: ''
 
 runs:
   using: "composite"
@@ -27,7 +31,7 @@ runs:
 
     - name: Build Rust project
       run: |
-        cargo build
+        cargo build ${{ inputs.build-flags }}
         mkdir -p bin/x86_64-unknown-linux-gnu
         cp target/release/replex bin/x86_64-unknown-linux-gnu/
       shell: bash

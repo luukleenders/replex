@@ -18,13 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-
-    - name: Transform branch name to Docker tag
-      id: sanitised
-      run: |
-        DOCKER_TAG=$(echo "${{ github.head_ref }}" | tr '[:upper:]' '[:lower:]' | sed -e 's/\//-/g' -e 's/[^a-z0-9.-]//g')
-        DOCKER_TAG="pr-$DOCKER_TAG"
-        echo "DOCKER_TAG=$DOCKER_TAG" >> $GITHUB_ENV
     
     - name: Rust build
       uses: ./.github/actions/rust-build
@@ -32,7 +25,6 @@ jobs:
     - name: Docker build and push
       uses: ./.github/actions/docker-build-and-push
       with:
-        tag: ${{ env.DOCKER_TAG }}
         token: ${{ secrets.REPLEX_PAT }}
 
     - name: Comment Docker image URL
