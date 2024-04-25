@@ -18,7 +18,7 @@ jobs:
     - name: Rust build (dry run)
       uses: rust-build/rust-build.action@v1.4.5
       with:
-        RUSTTARGET: x86_64-unknown-linux-gnu
+        RUSTTARGET: x86_64-unknown-linux-musl
         UPLOAD_MODE: none
       env:
         GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
