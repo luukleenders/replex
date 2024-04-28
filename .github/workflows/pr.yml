@@ -9,25 +9,31 @@ permissions:
   pull-requests: write
 
 jobs:
-  build_and_push:
-    name: Build and push Docker image
+  validate:
+    name: Validate PR
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform:
-          - release_for: x86_64 Linux
-            os: ubuntu-22.04
-            docker: linux/amd64
-            target: x86_64-unknown-linux-gnu
-            bin: replex
-            name: x86_64-unknown-linux-gnu.tar.gz
-            command: build
-
     steps:
       - uses: actions/checkout@v4
       - uses: actions/labeler@v5
         with:
           repo-token: ${{ secrets.REPLEX_PAT }}
+
+  # build_and_push:
+  #   name: Build and push Docker image
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       platform:
+  #         - release_for: x86_64 Linux
+  #           os: ubuntu-22.04
+  #           docker: linux/amd64
+  #           target: x86_64-unknown-linux-gnu
+  #           bin: replex
+  #           name: x86_64-unknown-linux-gnu.tar.gz
+  #           command: build
+
+  #   steps:
+  #     - uses: actions/checkout@v4
 
       # - uses: dtolnay/rust-toolchain@stable
       
