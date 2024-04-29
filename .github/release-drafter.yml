@@ -27,16 +27,3 @@ version-resolver:
     labels:
       - 'patch'
   default: patch
-
-autolabeler:
-  - label: 'chore'
-    branch:
-      - '/chore\/.+/'
-  - label: 'bugfix'
-    branch:
-      - '/fix\/.+/'
-      - '/bugfix\/.+/'
-  - label: 'feature'
-    branch:
-      - '/feat\/.+/'
-      - '/feature\/.+/'
