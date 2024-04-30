@@ -16,6 +16,7 @@ permissions:
 jobs:
   validate:
     name: Validate PR Title
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +27,7 @@ jobs:
 
   label:
     name: Label PR
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
