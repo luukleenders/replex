@@ -38,8 +38,6 @@ jobs:
     name: Build - ${{ matrix.platform.release_for }}
     needs: [validate, label]
     runs-on: ${{ matrix.platform.os }}
-    outputs:
-      platforms: ${{ steps.collect-platforms.outputs.platforms }}
 
     strategy:
       matrix:
@@ -67,20 +65,3 @@ jobs:
         with:
           command: ${{ matrix.platform.command }}
           target: ${{ matrix.platform.target }}
-          args: "--locked --release"
-  
-      - name: Move bin
-        shell: bash
-        run: |
-          mkdir -p bin/${{ matrix.platform.target }}
-          mv target/${{ matrix.platform.target }}/release/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
-
-      - name: Upload binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.platform.target }}
-          path: bin/${{ matrix.platform.target }}
-        
-      - name: Collect platform targets
-        id: collect-platforms
-        run: echo "platforms=${{ matrix.platform.target }}" >> $GITHUB_ENV
