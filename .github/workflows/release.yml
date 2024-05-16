@@ -34,14 +34,46 @@ jobs:
       - name: Prepare semantic-release for Rust
         run: semantic-release-cargo prepare ${{ needs.get-next-version.outputs.new-release-version }}
 
-      - name: Commit and push version update
+      - name: Commit changes
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git checkout -b update-version
           git commit -am "chore(release): update Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}"
-          git push origin main
+          git push origin update-version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(release): update Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}"
+          branch: update-version
+          title: "chore(release): update Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}"
+          body: "This PR updates the Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}."
+          labels: "automerge"
+
+      - name: Merge Pull Request
+        if: success()
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const { data: pullRequest } = await github.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            });
+
+            if (pullRequest) {
+              await github.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                merge_method: 'merge',
+              });
+            }
 
   build:
     name: Build - ${{ matrix.platform.release_for }}
