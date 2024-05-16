@@ -85,7 +85,7 @@ jobs:
       - name: Upload binaries
         uses: actions/upload-artifact@v4
         with:
-          name: bin-${{ matrix.platform.target }}
+          name: ${{ matrix.platform.target }}
           path: bin/${{ matrix.platform.target }}
         
       - name: Collect platform targets
