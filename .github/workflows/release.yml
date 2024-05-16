@@ -41,6 +41,8 @@ jobs:
         uses: actions-js/push@master
         with:
           github_token: ${{ secrets.REPLEX_PAT }}
+          branch: chore/update-version
+          message: "chore(release): update Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
