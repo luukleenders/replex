@@ -59,8 +59,13 @@ jobs:
           body: "This PR updates the Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}."
           labels: "automerge"
 
-      - name: Wait for PR creation
-        run: sleep 10
+      - name: Wait for PR checks
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.ref }}
+          check-name: "Validate PR Title, Label PR"
+          repo-token: ${{ secrets.REPLEX_PAT }}
+          wait-interval: 10
 
       - name: Merge Pull Request
         id: merge
