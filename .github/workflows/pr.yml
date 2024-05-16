@@ -83,4 +83,4 @@ jobs:
         
       - name: Collect platform targets
         id: collect-platforms
-        run: echo "platforms=${{ matrix.platform.target }}" >> $GITHUB_ENVs
+        run: echo "platforms=${{ matrix.platform.target }}" >> $GITHUB_ENV
