@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      
+      - name: Cache cargo & target directories
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build binary
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: build
+          target: x86_64-unknown-linux-gnu
+
+  push:
+    name: Push Docker image
+    runs-on: ubuntu-22.04
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and push Docker image
+        uses: ./.github/actions/docker-build-and-push
+        with:
+          token: ${{ secrets.REPLEX_PAT }}
+    
+  release:
+    name: Release
+    runs-on: ubuntu-22.04
+    needs: [build, push]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: release-drafter/release-drafter@v6
+        id: release-drafter
+        env: 
+          GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
+
+      - uses: eregon/publish-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
+        with:
+          release_id: ${{ steps.release-drafter.outputs.id }}
