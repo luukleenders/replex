@@ -33,8 +33,19 @@ jobs:
 
   build:
     name: Build
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.platform.os }}
     needs: [validate, label]
+
+    strategy:
+      matrix:
+        platform:
+          - release_for: x86_64 Linux
+            os: ubuntu-22.04
+            docker: linux/amd64
+            target: x86_64-unknown-linux-gnu
+            bin: replex
+            name: x86_64-unknown-linux-gnu.tar.gz
+            command: build
 
     steps:
       - uses: actions/checkout@v4
@@ -46,18 +57,18 @@ jobs:
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v0
         with:
-          command: build
-          target: x86_64-unknown-linux-gnu
+          command: ${{ matrix.platform.command }}
+          target: ${{ matrix.platform.target }}
           args: "--locked --release"
 
       - name: Move bin
         shell: bash
         run: |
-          mkdir -p bin/x86_64-unknown-linux-gnu
-          mv target/x86_64-unknown-linux-gnu/release/replex bin/x86_64-unknown-linux-gnu/replex
+          mkdir -p bin/${{ matrix.platform.target }}
+          mv target/${{ matrix.platform.target }}/release/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
 
       - name: Bocker build and push
         uses: ./.github/actions/docker-build-and-push
         with:
-          platform: linux/amd64
+          platform: ${{ matrix.platform.docker }}
           token: ${{ secrets.REPLEX_PAT }}
