@@ -2,7 +2,7 @@ name: Draft Release
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize]
   push:
     branches:
       - main

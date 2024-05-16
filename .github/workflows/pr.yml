@@ -59,6 +59,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.platform.target }}
+          shared-key: ${{ runner.os }}-cargox
           cache-on-failure: true
 
       - name: Build binary
