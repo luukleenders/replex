@@ -5,6 +5,9 @@ inputs:
   token:
     description: Token for Docker registry login
     required: true
+  platform:
+    description: Platform to build for
+    required: true
 
 runs:
   using: composite
@@ -46,6 +49,7 @@ runs:
       uses: docker/build-push-action@v5
       with:
         context: .
+        platforms: ${{ steps.meta.outputs.platforms }}
         file: .github/Dockerfile
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
