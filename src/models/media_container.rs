@@ -32,12 +32,9 @@ use crate::utils::sort_by_last_viewed;
 #[serde(rename_all = "camelCase")]
 #[yaserde(root = "MediaContainer")]
 pub struct WrappedMediaContainer {
-    #[serde(rename = "MediaContainer")]
-    // #[serde(rename="$value")]
-    // #[yaserde(child)]
+    #[serde(default, rename = "MediaContainer")]
     pub media_container: MediaContainer,
     #[serde(skip_serializing, skip_deserializing)]
-    // #[yaserde(attribute)]
     pub content_type: ContentType,
 }
 
