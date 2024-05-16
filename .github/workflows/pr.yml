@@ -4,6 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
 
+env: 
+  PLATFORMS:
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -32,9 +35,22 @@ jobs:
           repo-token: ${{ secrets.REPLEX_PAT }}
 
   build:
-    name: Build
-    runs-on: ubuntu-22.04
+    name: Build - ${{ matrix.platform.release_for }}
     needs: [validate, label]
+    runs-on: ${{ matrix.platform.os }}
+    outputs:
+      platforms: ${{ steps.collect-platforms.outputs.platforms }}
+
+    strategy:
+      matrix:
+        platform:
+          - release_for: x86_64 Linux
+            os: ubuntu-22.04
+            docker: linux/amd64
+            target: x86_64-unknown-linux-gnu
+            bin: replex
+            name: x86_64-unknown-linux-gnu.tar.gz
+            command: build
 
     steps:
       - uses: actions/checkout@v4
@@ -42,9 +58,29 @@ jobs:
       
       - name: Cache cargo & target directories
         uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.platform.target }}
+          cache-on-failure: true
 
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v0
         with:
-          command: build
-          target: x86_64-unknown-linux-gnu
+          command: ${{ matrix.platform.command }}
+          target: ${{ matrix.platform.target }}
+          args: "--locked --release"
+  
+      - name: Move bin
+        shell: bash
+        run: |
+          mkdir -p bin/${{ matrix.platform.target }}
+          mv target/${{ matrix.platform.target }}/release/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.target }}
+          path: bin/${{ matrix.platform.target }}
+        
+      - name: Collect platform targets
+        id: collect-platforms
+        run: echo "platforms=${{ matrix.platform.target }}" >> $GITHUB_ENV
