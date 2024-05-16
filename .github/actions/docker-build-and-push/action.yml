@@ -20,6 +20,18 @@ runs:
       with:
         path: ./bin
 
+    - name: Inspect bin directory
+      shell: bash
+      run: ls -al ./bin
+
+    - name: Inspect downloaded artifacts
+      shell: bash
+      run: |
+        for dir in ./bin/*; do
+          echo "Contents of $dir:"
+          ls -al $dir
+        done
+
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v2
 
