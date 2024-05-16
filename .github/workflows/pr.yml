@@ -32,7 +32,7 @@ jobs:
           repo-token: ${{ secrets.REPLEX_PAT }}
 
   build:
-    name: Build
+    name: Build - ${{ matrix.platform.release_for }}
     runs-on: ${{ matrix.platform.os }}
     needs: [validate, label]
 
@@ -46,6 +46,13 @@ jobs:
             bin: replex
             name: x86_64-unknown-linux-gnu.tar.gz
             command: build
+          - release_for: ARM64 Linux
+            os: ubuntu-22.04
+            docker: linux/arm64
+            target: aarch64-unknown-linux-gnu
+            bin: replex
+            name: aarch64-unknown-linux-gnu.tar.gz
+            command: build
 
     steps:
       - uses: actions/checkout@v4
@@ -53,6 +60,8 @@ jobs:
       
       - name: Cache cargo & target directories
         uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.platform.target }}
 
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v0
