@@ -38,9 +38,9 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git checkout -b update-version
+          git checkout -b chore/update-version
           git commit -am "chore(release): update Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}"
-          git push origin update-version
+          git push origin chore/update-version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -49,7 +49,8 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore(release): update Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}"
-          branch: update-version
+          base: main
+          branch: chore/update-version
           title: "chore(release): update Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}"
           body: "This PR updates the Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}."
           labels: "automerge"
