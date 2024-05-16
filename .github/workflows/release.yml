@@ -42,12 +42,12 @@ jobs:
           git commit -am "chore(release): update Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}"
           git push origin chore/update-version
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.REPLEX_PAT }}
           commit-message: "chore(release): update Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}"
           base: main
           branch: chore/update-version
@@ -56,25 +56,9 @@ jobs:
           labels: "automerge"
 
       - name: Merge Pull Request
-        if: success()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const pr = context.payload.pull_request;
-            const { data: pullRequest } = await github.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr.number,
-            });
-
-            if (pullRequest) {
-              await github.pulls.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr.number,
-                merge_method: 'merge',
-              });
-            }
+        uses: "pascalgn/automerge-action@v0.16.3"
+        env:
+          GITHUB_TOKEN: "${{ secrets.REPLEX_PAT }}"
 
   build:
     name: Build - ${{ matrix.platform.release_for }}
