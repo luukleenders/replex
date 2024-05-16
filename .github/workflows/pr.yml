@@ -85,7 +85,7 @@ jobs:
       - name: Upload binaries
         uses: actions/upload-artifact@v3
         with:
-          name: replex-${{ matrix.platform.target }}
+          name: bin-${{ matrix.platform.target }}
           path: bin/${{ matrix.platform.target }}
         
       - name: Collect platform targets

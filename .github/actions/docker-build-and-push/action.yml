@@ -18,8 +18,8 @@ runs:
     - name: Download binaries
       uses: actions/download-artifact@v3
       with:
-        name: bin
-        path: bin/
+        name: bin-*
+        path: ./bin
 
     - name: Setup QEMU
       uses: docker/setup-qemu-action@v2
