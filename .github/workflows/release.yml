@@ -69,7 +69,7 @@ jobs:
           github-token: ${{ secrets.REPLEX_PAT }}
           result-encoding: boolean
           script: |
-            const merged = await github.pulls.merge({
+            const merged = await github.rest.pulls.merge({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: ${{ steps.create-pr.outputs.pull-request-number }},
