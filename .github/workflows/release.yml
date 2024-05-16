@@ -58,12 +58,38 @@ jobs:
           body: "This PR updates the Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}."
           labels: "automerge"
 
+      - name: Wait for PR creation
+        run: sleep 10
+
       - name: Merge Pull Request
+        if: success()
         id: merge
-        uses: "pascalgn/automerge-action@v0.16.3"
-        env:
-          GITHUB_TOKEN: "${{ secrets.REPLEX_PAT }}"
-          MERGE_DELETE_BRANCH: true
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const pr = (await github.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: 'chore/update-version'
+            })).data[0];
+      
+            if (pr) {
+              await github.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                merge_method: 'merge'
+              });
+      
+              await github.git.deleteRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'heads/chore/update-version'
+              });
+            } else {
+              throw new Error('Pull request not found.');
+            }
 
   build:
     name: Build - ${{ matrix.platform.release_for }}
