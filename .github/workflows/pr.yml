@@ -83,7 +83,7 @@ jobs:
           mv target/${{ matrix.platform.target }}/release/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
 
       - name: Upload binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bin-${{ matrix.platform.target }}
           path: bin/${{ matrix.platform.target }}
@@ -104,7 +104,7 @@ jobs:
         id: aggregate-platforms
         run: |
           platforms=$(echo ${{ needs.build.outputs.platforms }} | tr '\n' ',')
-          platforms=${platforms%,}  # Remove trailing comma
+          platforms=${platforms%,}
           echo "PLATFORMS=$platforms" >> $GITHUB_ENV
 
       - name: Bocker build and push
