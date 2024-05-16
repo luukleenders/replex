@@ -23,6 +23,8 @@ jobs:
     needs: get-next-version
     if: needs.get-next-version.outputs.new-release-published == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      is-merged: ${{ steps.merge.outputs.result }}
 
     steps:
       - name: Checkout repository
@@ -46,9 +48,47 @@ jobs:
           force: true
           message: "chore(release): update Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}"
 
+      - name: Create Pull Request
+        id: create-pr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.REPLEX_PAT }}
+          commit-message: "chore(release): update Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}"
+          base: main
+          branch: chore/update-version
+          title: "chore(release): update Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}"
+          body: "This PR updates the Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}."
+          labels: "automerge, cargo-bump"
+
+      - name: Wait for PR checks
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.head_ref }}
+          running-workflow-name: 'Pull Request'
+          repo-token: ${{ secrets.REPLEX_PAT }}
+          wait-interval: 10
+
+      - name: Merge Pull Request
+        id: merge
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.REPLEX_PAT }}
+          result-encoding: boolean
+          script: |
+            const merged = await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ steps.create-pr.outputs.pull-request-number }},
+            });
+
+            console.log(merged);
+
+            return false;
+
   build:
     name: Build - ${{ matrix.platform.release_for }}
     needs: update-version
+    if: needs.update-version.outputs.is-merged == true
     runs-on: ${{ matrix.platform.os }}
     outputs:
       platforms: ${{ steps.collect-platforms.outputs.platforms }}
