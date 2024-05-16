@@ -69,7 +69,7 @@ jobs:
           branch: chore/update-version
           title: "chore(release): update Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}"
           body: "This PR updates the Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}."
-          labels: "automerge, cargo-bump"
+          labels: "automerge"
 
       - name: Wait for PR checks
         if : ${{ steps.create-pr.outputs.pull-request-number }}
