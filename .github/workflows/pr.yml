@@ -48,13 +48,12 @@ jobs:
         with:
           command: build
           target: x86_64-unknown-linux-gnu
+          args: "--locked --release"
 
       - name: Move bin
         shell: bash
         run: |
           mkdir -p bin/x86_64-unknown-linux-gnu
-          ls -al target/x86_64-unknown-linux-gnu/
-          ls -al target/x86_64-unknown-linux-gnu/release
           mv target/x86_64-unknown-linux-gnu/release/replex bin/x86_64-unknown-linux-gnu/replex
 
       - name: Bocker build and push
