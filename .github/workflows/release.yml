@@ -37,16 +37,10 @@ jobs:
       - name: Prepare semantic-release for Rust
         run: semantic-release-cargo prepare ${{ needs.get-next-version.outputs.new-release-version }}
 
-      - name: Commit changes
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git checkout -b chore/update-version
-          git add .
-          git commit -am "chore(release): update Cargo.toml version to ${{ needs.get-next-version.outputs.new-release-version }}"
-          git push origin chore/update-version
-        env:
-          GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
+      - name: Commit & Push changes
+        uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.REPLEX_PAT }}
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
