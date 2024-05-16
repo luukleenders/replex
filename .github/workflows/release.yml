@@ -37,6 +37,13 @@ jobs:
       - name: Prepare semantic-release for Rust
         run: semantic-release-cargo prepare ${{ needs.get-next-version.outputs.new-release-version }}
 
+    
+      - name: Debug - Show current directory and list contents
+        run: |
+          echo "Current directory: $(pwd)"
+          ls -al
+          cat Cargo.toml  # Check the content of Cargo.toml to see if it has been updated
+
       - name: Commit changes
         run: |
           git config --global user.name 'github-actions[bot]'
