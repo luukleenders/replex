@@ -72,7 +72,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.REPLEX_PAT }}
-          result-encoding: boolean
+          result-encoding: string
           script: |
             const merged = await github.rest.pulls.merge({
               owner: context.repo.owner,
@@ -80,14 +80,12 @@ jobs:
               pull_number: ${{ steps.create-pr.outputs.pull-request-number }},
             });
 
-            console.log(merged);
-
-            return false;
+            return merged.data.merged
 
   build:
     name: Build - ${{ matrix.platform.release_for }}
     needs: update-version
-    if: needs.update-version.outputs.is-merged == true
+    if: needs.update-version.outputs.is-merged == 'true'
     runs-on: ${{ matrix.platform.os }}
     outputs:
       platforms: ${{ steps.collect-platforms.outputs.platforms }}
