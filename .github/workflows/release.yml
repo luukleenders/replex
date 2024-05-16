@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       is-merged: ${{ steps.merge.outputs.result }}
-      is-changed: ${{ steps.is-changed.outputs.result }}
+      is-changed: ${{ steps.check-changes.outputs.result }}
 
     steps:
       - name: Checkout repository
@@ -42,16 +42,16 @@ jobs:
         run: semantic-release-cargo prepare ${{ needs.get-next-version.outputs.new-release-version }}
 
       - name: Check for changes
-        id: is-changed
+        id: check-changes
         run: |
           if [ -n "$(git status --porcelain)" ]; then
-            return "true"
+            echo "is-changed=true" >> $GITHUB_OUTPUT
           else
-            return "false"
+            echo "is-changed=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Commit & Push changes
-        if: steps.is-changed.outputs.result == 'true'
+        if: steps.check-changes.outputs.result == 'true'
         uses: actions-js/push@master
         with:
           github_token: ${{ secrets.REPLEX_PAT }}
@@ -60,7 +60,7 @@ jobs:
 
       - name: Create Pull Request
         id: create-pr
-        if: steps.is-changed.outputs.result == 'true'
+        if: steps.check-changes.outputs.result == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.REPLEX_PAT }}
@@ -82,7 +82,7 @@ jobs:
 
       - name: Merge Pull Request
         id: merge
-        if: steps.is-changed.outputs.result == 'true'
+        if: steps.check-changes.outputs.result == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.REPLEX_PAT }}
