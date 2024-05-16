@@ -12,9 +12,29 @@ permissions:
   pull-requests: write
 
 jobs:
+  get-next-version:
+    uses: semantic-release-action/next-release-version/.github/workflows/next-release-version.yml@v4
+
+  update-cargo:
+    name: Update Cargo.toml
+    runs-on: ubuntu-22.04
+    needs: get-next-version
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install semantic-release-cargo
+        uses: taiki-e/install-action@v2
+        with:
+          tool: semantic-release-cargo@2
+
+      - name: Prepare semantic-release for Rust
+        run: semantic-release-cargo prepare ${{ needs.get-next-version.outputs.new-release-published }}
+
   build:
     name: Build
     runs-on: ubuntu-22.04
+    needs: update-cargo
 
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +65,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-22.04
-    needs: [build, push]
+    needs: push
 
     steps:
       - uses: actions/checkout@v4
