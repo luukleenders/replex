@@ -37,7 +37,7 @@ jobs:
   build:
     name: Build - ${{ matrix.platform.release_for }}
     needs: [validate, label]
-    if: github.ref != 'refs/heads/chore/update-version'
+    if: github.head_ref != 'refs/heads/chore/update-version'
     runs-on: ${{ matrix.platform.os }}
 
     strategy:
