@@ -12,9 +12,33 @@ permissions:
   pull-requests: write
 
 jobs:
+  get-next-version:
+    uses: semantic-release-action/next-release-version/.github/workflows/next-release-version.yml@v4
+
   build:
     name: Build
-    runs-on: ubuntu-22.04
+    needs: get-next-version
+    if: needs.get-next-version.outputs.new-release-published == 'true'
+    runs-on: ${{ matrix.platform.os }}
+    
+    strategy:
+      matrix:
+        platform:
+          - release_for: x86_64 Linux
+            os: ubuntu-22.04
+            docker: linux/amd64
+            target: x86_64-unknown-linux-gnu
+            bin: replex
+            name: x86_64-unknown-linux-gnu.tar.gz
+            command: build
+
+          - release_for: ARM64 Linux
+            os: ubuntu-22.04
+            docker: linux/arm64
+            target: aarch64-unknown-linux-gnu
+            bin: replex
+            name: aarch64-unknown-linux-gnu.tar.gz
+            command: build
 
     steps:
       - uses: actions/checkout@v4
@@ -22,30 +46,47 @@ jobs:
       
       - name: Cache cargo & target directories
         uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.platform.target }}
+
+      - name: Install semantic-release-cargo
+        uses: taiki-e/install-action@v2
+        with:
+          tool: semantic-release-cargo@2
+
+      - name: Prepare semantic-release for Rust
+        run: semantic-release-cargo prepare ${{ needs.get-next-version.outputs.new-release-version }}
 
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v0
         with:
-          command: build
-          target: x86_64-unknown-linux-gnu
+          command: ${{ matrix.platform.command }}
+          target: ${{ matrix.platform.target }}
+          args: "--locked --release"
 
-  push:
-    name: Push Docker image
-    runs-on: ubuntu-22.04
-    needs: build
+      - name: Move bin
+        shell: bash
+        run: |
+          mkdir -p bin/${{ matrix.platform.target }}
+          mv target/${{ matrix.platform.target }}/release/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build and push Docker image
+      - name: Bocker build and push
         uses: ./.github/actions/docker-build-and-push
         with:
           token: ${{ secrets.REPLEX_PAT }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: bin
+          path: bin/*
+          if-no-files-found: error
+          retention-days: 1
     
   release:
     name: Release
     runs-on: ubuntu-22.04
-    needs: [build, push]
+    needs: build
 
     steps:
       - uses: actions/checkout@v4
