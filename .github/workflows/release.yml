@@ -63,7 +63,7 @@ jobs:
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.ref }}
-          check-name: "Validate PR Title, Label PR"
+          running-workflow-name: 'Pull Request'
           repo-token: ${{ secrets.REPLEX_PAT }}
           wait-interval: 10
 
