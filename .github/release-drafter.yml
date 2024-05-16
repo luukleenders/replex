@@ -11,7 +11,7 @@ categories:
   - title: '🚀 Features'
     label: feature
   - title: '🐛 Bug Fixes'
-    label: bugfix
+    label: fix
   - title: '🧹 Chores'
     collapse-after: 2
     label: chore
