@@ -81,6 +81,12 @@ jobs:
         run: |
           mkdir -p bin/${{ matrix.platform.target }}
           mv target/${{ matrix.platform.target }}/release/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: replex-${{ matrix.platform.target }}
+          path: bin/${{ matrix.platform.target }}
         
       - name: Collect platform targets
         id: collect-platforms
@@ -93,7 +99,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Aggregate platforms
         id: aggregate-platforms
         run: |
