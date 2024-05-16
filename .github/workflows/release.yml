@@ -21,7 +21,10 @@ jobs:
   update-version:
     name: Update Replex version
     needs: get-next-version
+    if: needs.get-next-version.outputs.new-release-published == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      mergeResult: ${{ steps.merge.outputs.result }}
 
     steps:
       - name: Checkout repository
@@ -56,15 +59,16 @@ jobs:
           labels: "automerge"
 
       - name: Merge Pull Request
+        id: merge
         uses: "pascalgn/automerge-action@v0.16.3"
         env:
           GITHUB_TOKEN: "${{ secrets.REPLEX_PAT }}"
-          MERGE_LABELS: "automerge"
+          MERGE_DELETE_BRANCH: true
 
   build:
     name: Build - ${{ matrix.platform.release_for }}
-    needs: [get-next-version, update-version]
-    if: needs.get-next-version.outputs.new-release-published == 'true'
+    needs: update-version
+    if: needs.update-version.outputs.mergeResult == 'merged'
     runs-on: ${{ matrix.platform.os }}
     outputs:
       platforms: ${{ steps.collect-platforms.outputs.platforms }}
@@ -157,7 +161,7 @@ jobs:
           platforms=${platforms%,}
           echo "PLATFORMS=$platforms" >> $GITHUB_ENV
 
-      - name: Bocker build and push
+      - name: Docker build and push
         uses: ./.github/actions/docker-build-and-push
         with:
           platform: ${{ env.PLATFORMS }}
