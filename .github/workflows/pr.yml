@@ -51,9 +51,11 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            const outputs = ${{ steps.release-drafter.outputs }};
+            const outputs = steps.release-drafter.outputs;
             console.log("Release Drafter Outputs:");
-            console.log(outputs.tag_name);
+            for (const [key, value] of Object.entries(outputs)) {
+              console.log(`${key}: ${value}`);
+            }
 
   # build:
   #   name: Build - ${{ matrix.platform.release_for }}
