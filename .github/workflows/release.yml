@@ -19,19 +19,6 @@ jobs:
     name: Draft Release
     runs-on: ubuntu-22.04
 
-    steps:
-      - uses: actions/checkout@v4
-      - uses: release-drafter/release-drafter@v6
-        id: release-drafter
-        env: 
-          GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
-        with:
-          commitish: refs/heads/main
-
-      - name: Get next version
-        id: get-next-version
-        run: echo ${{ steps.release-drafter.outputs }} >> $GITHUB_ENV
-
   # update-version:
   #   name: Update Replex version
   #   needs: draft-release
