@@ -51,7 +51,11 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            core.info(`Step result is: ${{steps.release-drafter.outputs}}`)
+            const outputs = ${{ steps.release-drafter.outputs }}
+
+            for (const key in outputs) {
+              core.info(`${key} = ${outputs[key]}`)
+            }
 
   # build:
   #   name: Build - ${{ matrix.platform.release_for }}
