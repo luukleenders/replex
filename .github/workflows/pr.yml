@@ -34,66 +34,41 @@ jobs:
         with:
           repo-token: ${{ secrets.REPLEX_PAT }}
 
-  get-next-version:
-    name: Draft Release
-    runs-on: ubuntu-latest
-    outputs:
-      result: ${{ steps.get-next-version.outputs.result }}
+  update-cargo:
+    uses: ./.github/workflows/update-cargo.yml
+    secrets: inherit
+
+  build:
+    name: Build - ${{ matrix.platform.release_for }}
+    needs: [update-cargo, validate, label]
+    # if: github.head_ref != 'chore/update-version'
+    if: needs.update-cargo.outputs.is-successful == 'true'
+    runs-on: ${{ matrix.platform.os }}
+
+    strategy:
+      matrix:
+        platform:
+          - release_for: x86_64 Linux
+            os: ubuntu-22.04
+            docker: linux/amd64
+            target: x86_64-unknown-linux-gnu
+            bin: replex
+            name: x86_64-unknown-linux-gnu.tar.gz
+            command: build
 
     steps:
-      - name: Get Next Version
-        id: get-next-version
-        uses: actions/github-script@v7
-        env:
-          GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
-        with:
-          script: |
-            const releases = await github.rest.repos.listReleases({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
-            const latestRelease = releases.data[0].tag_name.replace('v', '');
-            return latestRelease;
-
-  log-version:
-    name: Log Next Version
-    needs: get-next-version
-    runs-on: ubuntu-latest
-    steps:
-      - name: Log Next Version
-        run: echo ${{ needs.get-next-version.outputs.result }}
-            
-
-  # build:
-  #   name: Build - ${{ matrix.platform.release_for }}
-  #   needs: [validate, label]
-  #   if: github.head_ref != 'chore/update-version'
-  #   runs-on: ${{ matrix.platform.os }}
-
-  #   strategy:
-  #     matrix:
-  #       platform:
-  #         - release_for: x86_64 Linux
-  #           os: ubuntu-22.04
-  #           docker: linux/amd64
-  #           target: x86_64-unknown-linux-gnu
-  #           bin: replex
-  #           name: x86_64-unknown-linux-gnu.tar.gz
-  #           command: build
-
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
       
-  #     - name: Cache cargo & target directories
-  #       uses: Swatinem/rust-cache@v2
-  #       with:
-  #         key: ${{ matrix.platform.target }}
-  #         shared-key: ${{ runner.os }}-cargox
-  #         cache-on-failure: true
+      - name: Cache cargo & target directories
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.platform.target }}
+          shared-key: ${{ runner.os }}-cargox
+          cache-on-failure: true
 
-  #     - name: Build binary
-  #       uses: houseabsolute/actions-rust-cross@v0
-  #       with:
-  #         command: ${{ matrix.platform.command }}
-  #         target: ${{ matrix.platform.target }}
+      - name: Build binary
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: ${{ matrix.platform.command }}
+          target: ${{ matrix.platform.target }}
