@@ -22,6 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: release-drafter/release-drafter@v6
+        id: release-drafter
         env: 
           GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
         with:
@@ -29,7 +30,7 @@ jobs:
 
       - name: Get next version
         id: get-next-version
-        run: echo "new-release-version=$(jq -r '.version' .version)" >> $GITHUB_ENV
+        run: echo ${{ steps.release-drafter.outputs }} >> $GITHUB_ENV
 
   # update-version:
   #   name: Update Replex version
