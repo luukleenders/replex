@@ -34,36 +34,52 @@ jobs:
         with:
           repo-token: ${{ secrets.REPLEX_PAT }}
 
-  build:
-    name: Build - ${{ matrix.platform.release_for }}
-    needs: [validate, label]
-    if: github.head_ref != 'chore/update-version'
-    runs-on: ${{ matrix.platform.os }}
-
-    strategy:
-      matrix:
-        platform:
-          - release_for: x86_64 Linux
-            os: ubuntu-22.04
-            docker: linux/amd64
-            target: x86_64-unknown-linux-gnu
-            bin: replex
-            name: x86_64-unknown-linux-gnu.tar.gz
-            command: build
+  draft-release:
+    name: Draft Release
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      
-      - name: Cache cargo & target directories
-        uses: Swatinem/rust-cache@v2
+      - uses: release-drafter/release-drafter@v6
+        env: 
+          GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
         with:
-          key: ${{ matrix.platform.target }}
-          shared-key: ${{ runner.os }}-cargox
-          cache-on-failure: true
+          commitish: refs/heads/main
 
-      - name: Build binary
-        uses: houseabsolute/actions-rust-cross@v0
-        with:
-          command: ${{ matrix.platform.command }}
-          target: ${{ matrix.platform.target }}
+      - name: Get next version
+        id: get-next-version
+        run: echo "new-release-version=$(jq -r '.version' .version)" >> $GITHUB_ENV
+
+  # build:
+  #   name: Build - ${{ matrix.platform.release_for }}
+  #   needs: [validate, label]
+  #   if: github.head_ref != 'chore/update-version'
+  #   runs-on: ${{ matrix.platform.os }}
+
+  #   strategy:
+  #     matrix:
+  #       platform:
+  #         - release_for: x86_64 Linux
+  #           os: ubuntu-22.04
+  #           docker: linux/amd64
+  #           target: x86_64-unknown-linux-gnu
+  #           bin: replex
+  #           name: x86_64-unknown-linux-gnu.tar.gz
+  #           command: build
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: dtolnay/rust-toolchain@stable
+      
+  #     - name: Cache cargo & target directories
+  #       uses: Swatinem/rust-cache@v2
+  #       with:
+  #         key: ${{ matrix.platform.target }}
+  #         shared-key: ${{ runner.os }}-cargox
+  #         cache-on-failure: true
+
+  #     - name: Build binary
+  #       uses: houseabsolute/actions-rust-cross@v0
+  #       with:
+  #         command: ${{ matrix.platform.command }}
+  #         target: ${{ matrix.platform.target }}

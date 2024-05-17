@@ -1,8 +1,6 @@
 name: Draft Release
 
 on:
-  pull_request:
-    types: [opened, synchronize, edited]
   push:
     branches:
       - main
@@ -21,3 +19,5 @@ jobs:
       - uses: release-drafter/release-drafter@v6
         env: 
           GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
+        with:
+          commitish: refs/heads/main
