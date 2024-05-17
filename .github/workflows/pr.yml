@@ -6,6 +6,7 @@ on:
 
 env: 
   PLATFORMS:
+  DRAFT_VERSION:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -47,15 +48,16 @@ jobs:
         with:
           commitish: refs/heads/main
 
-      - name: Log Release Drafter Outputs
-        uses: actions/github-script@v5
-        with:
-          script: |
-            const outputs = ${{ steps.release-drafter.outputs }}
+      - name: Extract Version from Logs
+        id: extract-version
+        run: |
+          # Extract the version from release-drafter logs
+          DRAFT_VERSION=$(cat $GITHUB_ENV | grep "Draft release" | sed 's/.*: v//')
+          echo "DRAFT_VERSION=$DRAFT_VERSION" >> $GITHUB_ENV
 
-            for (const key in outputs) {
-              core.info(`${key} = ${outputs[key]}`)
-            }
+      - name: Log Extracted Version
+        run: |
+          echo "Extracted Draft Version: ${{ env.DRAFT_VERSION }}"
 
   # build:
   #   name: Build - ${{ matrix.platform.release_for }}
