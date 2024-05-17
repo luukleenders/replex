@@ -40,20 +40,21 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: release-drafter/release-drafter@v6
-        id: release-drafter
-        env: 
-          GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
-        with:
-          commitish: refs/heads/main
+      - name: Get release
+        id: get-release
+        uses: bruceadams/get-release@v1.3.2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Log Release Drafter Outputs
         uses: actions/github-script@v5
         with:
           script: |
-            const githubEnv = process.env.GITHUB_ENV || '.github.env';
+            const outputs = ${{ steps.get-release.outputs }};
  
-            core.info(githubEnv);
+            for (const key in outputs) {
+              console.log(`${key} = ${outputs[key]}`);
+            }
             
 
   # build:
