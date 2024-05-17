@@ -9,9 +9,9 @@ on:
     outputs:
       is-successful:
         value: >
-          ${{ 
-            jobs.push-changes.outputs.is-merged == 'true' || 
-            jobs.update-cargo.outputs.is-changed == 'false'
+          ${{
+            !jobs.update-cargo.outputs.is-changed ||
+            (jobs.update-cargo.outputs.is-changed && jobs.push-changes.outputs.is-merged)
           }}
 
 jobs:
@@ -72,7 +72,7 @@ jobs:
   push-changes:
     name: Commit & Push changes
     needs: update-cargo
-    if: needs.update-cargo.outputs.is-changed == 'true'
+    if: needs.update-cargo.outputs.is-changed
     runs-on: ubuntu-latest
     outputs:
       is-merged: ${{ steps.merge.outputs.result }}

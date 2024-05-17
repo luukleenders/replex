@@ -22,7 +22,7 @@ jobs:
   build:
     name: Build - ${{ matrix.platform.release_for }}
     needs: update-cargo
-    if: needs.update-cargo.outputs.is-successful == 'true'
+    if: needs.update-cargo.outputs.is-successful
     runs-on: ${{ matrix.platform.os }}
     outputs:
       platforms: ${{ steps.collect-platforms.outputs.platforms }}
