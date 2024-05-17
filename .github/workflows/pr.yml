@@ -53,9 +53,7 @@ jobs:
           script: |
             const outputs = ${{ steps.release-drafter.outputs }};
             console.log("Release Drafter Outputs:");
-            for (const [key, value] of Object.entries(outputs)) {
-              console.log(`${key}: ${value}`);
-            }
+            console.log(outputs.tag_name);
 
   # build:
   #   name: Build - ${{ matrix.platform.release_for }}
