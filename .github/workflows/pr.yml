@@ -35,12 +35,13 @@ jobs:
           repo-token: ${{ secrets.REPLEX_PAT }}
 
   update-cargo:
+    needs: [validate, label]
     uses: ./.github/workflows/update-cargo.yml
     secrets: inherit
 
   build:
     name: Build - ${{ matrix.platform.release_for }}
-    needs: [update-cargo, validate, label]
+    needs: [update-cargo]
     # if: github.head_ref != 'chore/update-version'
     if: needs.update-cargo.outputs.is-successful == 'true'
     runs-on: ${{ matrix.platform.os }}
