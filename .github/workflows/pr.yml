@@ -44,7 +44,7 @@ jobs:
         id: get-release
         uses: bruceadams/get-release@v1.3.2
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
 
       - name: Log Release Drafter Outputs
         uses: actions/github-script@v5
