@@ -40,21 +40,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Get release
-        id: get-release
-        uses: bruceadams/get-release@v1.3.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
-
-      - name: Log Release Drafter Outputs
-        uses: actions/github-script@v5
+      
+      - name: Get Next Version
+        uses: actions/github-script@v7
         with:
           script: |
-            const outputs = ${{ steps.get-release.outputs }};
- 
-            for (const key in outputs) {
-              console.log(`${key} = ${outputs[key]}`);
-            }
+            const releases = await github.rest.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+
+            core.info(JSON.stringify(releases.data, null, 2));
             
 
   # build:
