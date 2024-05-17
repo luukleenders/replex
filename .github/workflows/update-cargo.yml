@@ -59,6 +59,10 @@ jobs:
             echo "is-changed=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Log is-changed
+        run: | 
+          echo "Is changed: ${{ steps.check-changes.outputs.is-changed }}"
+
       - name: Upload Cargo.toml
         uses: actions/upload-artifact@v4
         with:
