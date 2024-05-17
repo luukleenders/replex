@@ -10,8 +10,8 @@ on:
       is-successful:
         value: >
           ${{ 
-            (github.event.inputs.is-changed == 'true' && github.event.inputs.new-version == 'true') ||
-            (github.event.inputs.new-version == 'false' && github.event.inputs.is-changed == 'false')
+            jobs.update-cargo.outputs.is-changed == 'true' || 
+            jobs.update-cargo.outputs.is-changed == 'false'
           }}
 
 jobs:
@@ -70,6 +70,8 @@ jobs:
     needs: update-cargo
     if: needs.update-cargo.outputs.is-changed == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      is-merged: ${{ steps.merge.outputs.result }}
 
     steps:
       - name: Checkout repository
