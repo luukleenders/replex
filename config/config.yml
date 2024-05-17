@@ -7,14 +7,6 @@ next_up: "Jump back in"
 
 # List of hubs that will be sorted to the top of the home screen
 priority_hubs:
-  - "Trending this week"
-  - "Unwatched and popular"
-  - "Top 10 Pirated Movies of the Week"
-  - "Top Sitcoms"
-  - "Latest Anime"
-  - "UFC - The latest and greatest"
-  - "For the kids"
 
 # List of collections that should not include watched items
 exclude_watched:
-  - "Unwatched and popular"
