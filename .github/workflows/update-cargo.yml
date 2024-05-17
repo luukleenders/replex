@@ -10,7 +10,7 @@ on:
       is-successful:
         value: >
           ${{ 
-            jobs.update-cargo.outputs.is-changed == 'true' || 
+            jobs.push-changes.outputs.is-merged == 'true' || 
             jobs.update-cargo.outputs.is-changed == 'false'
           }}
 
