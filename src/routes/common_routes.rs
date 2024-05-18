@@ -22,7 +22,7 @@ pub fn routes() -> Router {
     let config = Config::load();
     Router::new()
         .then(|mut router| {
-            if config.better_on_deck {
+            if config.better_on_deck.enabled {
                 router = router.push(
                     Router::with_path(HUBS_CONTINUE_WATCHING)
                         .get(empty_media_container_handler),

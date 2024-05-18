@@ -21,11 +21,9 @@ impl Transform for HideInProgressTransform {
     ) -> Result<()> {
         let config = Config::load();
 
-        if container.hub.is_empty() || !config.better_on_deck {
+        if container.hub.is_empty() || !config.better_on_deck.enabled {
             return Ok(());
         }
-
-        println!("Hiding in progress items");
 
         let hubs = container.children_mut();
         let context = Some("hub.tv.inprogress".to_string());

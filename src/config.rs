@@ -3,6 +3,7 @@ use figment::{
     providers::{Env, Format, Yaml},
     Figment,
 };
+use nestify::nest;
 use once_cell::sync::Lazy;
 use serde::{self, Deserialize};
 
@@ -11,34 +12,45 @@ use crate::deserializers::{
     vec_from_comma_separated_or_list,
 };
 
-#[derive(Debug, PartialEq, Deserialize)]
+nest! {
+#[derive(Debug, PartialEq, Deserialize)]*
 pub struct Config {
     #[serde(deserialize_with = "deserialize_host")]
     pub host: String,
 
     pub port: Option<u64>,
 
+    pub better_on_deck: pub struct OnDeck {
+        #[serde(default, deserialize_with = "bool_from_str_or_int")]
+        pub enabled: bool,
+        pub in_progress: Option<String>,
+        pub next_up: Option<String>,
+    },
+
+    pub cache: pub struct Cache {
+        #[serde(default, deserialize_with = "bool_from_str_or_int")]
+        pub enabled: bool,
+        #[serde(default = "default_cache_ttl")]
+        pub ttl: u64,
+        #[serde(default = "as_true", deserialize_with = "bool_from_str_or_int")]
+        pub auto_refresh: bool,
+    },
+
+    pub exclude_watched: pub struct ExcludeWatched {
+        #[serde(default, deserialize_with = "bool_from_str_or_int")]
+        all: bool,
+        #[serde(default, deserialize_with = "vec_from_comma_separated_or_list")]
+        collections: Option<Vec<String>>,
+    },
+
+    pub redirect_streams: pub struct RedirectStreams {
+        #[serde(default, deserialize_with = "bool_from_str_or_int")]
+        pub enabled: bool,
+        pub host: Option<String>,
+    },
+
     #[serde(default, deserialize_with = "vec_from_comma_separated_or_list")]
-    pub exclude_watched: Option<Vec<String>>,
-
-    #[serde(default = "default_cache_ttl")]
-    pub cache_ttl: u64,
-
-    #[serde(default = "as_true", deserialize_with = "bool_from_str_or_int")]
-    pub cache_rows: bool,
-
-    #[serde(default = "as_true", deserialize_with = "bool_from_str_or_int")]
-    pub cache_rows_refresh: bool,
-
-    #[serde(default, deserialize_with = "deserialize_comma_separated")]
     pub hero_rows: Option<Vec<String>>,
-
-    #[serde(default, deserialize_with = "bool_from_str_or_int")]
-    pub better_on_deck: bool,
-
-    pub in_progress: Option<String>,
-
-    pub next_up: Option<String>,
 
     #[serde(default, deserialize_with = "vec_from_comma_separated_or_list")]
     pub priority_hubs: Option<Vec<String>>,
@@ -48,11 +60,6 @@ pub struct Config {
 
     #[serde(default, deserialize_with = "bool_from_str_or_int")]
     pub disable_leaf_count: bool,
-
-    #[serde(default, deserialize_with = "bool_from_str_or_int")]
-    pub redirect_streams: bool,
-
-    pub redirect_streams_host: Option<String>,
 
     #[serde(default, deserialize_with = "bool_from_str_or_int")]
     pub disable_related: bool,
@@ -73,7 +80,7 @@ pub struct Config {
     pub force_direct_play_for: Option<Vec<String>>,
 
     pub test_script: Option<String>,
-}
+}}
 
 impl Config {
     fn figment() -> Figment {

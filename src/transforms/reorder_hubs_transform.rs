@@ -24,15 +24,15 @@ impl Transform for ReorderHubsTransform {
         let mut reordered_hubs: Vec<MetaData> = Vec::new();
 
         // Move in_progress and next_up hubs to the top if they exist
-        if config.better_on_deck {
-            if let Some(in_progress) = &config.in_progress {
+        if config.better_on_deck.enabled {
+            if let Some(in_progress) = &config.better_on_deck.in_progress {
                 move_to_top(
                     in_progress,
                     item.children_mut(),
                     &mut reordered_hubs,
                 );
             }
-            if let Some(next_up) = &config.next_up {
+            if let Some(next_up) = &config.better_on_deck.next_up {
                 move_to_top(next_up, item.children_mut(), &mut reordered_hubs);
             }
         }

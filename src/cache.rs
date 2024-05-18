@@ -16,7 +16,7 @@ pub static CACHE_MANAGER: Lazy<Arc<CacheManager>> = Lazy::new(|| {
     let config = Config::load();
 
     // Create a new CacheManager instance with the specified capacity.
-    Arc::new(CacheManager::new(MAX_CAPACITY, config.cache_ttl))
+    Arc::new(CacheManager::new(MAX_CAPACITY, config.cache.ttl))
 });
 
 // A wrapper around the Moka cache to provide async support and serialization.
