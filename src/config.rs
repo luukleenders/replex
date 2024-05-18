@@ -44,9 +44,6 @@ pub struct Config {
     pub priority_hubs: Option<Vec<String>>,
 
     #[serde(default, deserialize_with = "bool_from_str_or_int")]
-    pub disable_continue_watching: bool,
-
-    #[serde(default, deserialize_with = "bool_from_str_or_int")]
     pub disable_user_state: bool,
 
     #[serde(default, deserialize_with = "bool_from_str_or_int")]
