@@ -1,7 +1,8 @@
 .DS_Store
 
+/config
 /target
 /vendor
-.vscode
 
+.vscode
 .env
