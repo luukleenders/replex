@@ -6,7 +6,7 @@ use salvo::prelude::*;
 pub fn routes() -> Router {
     let config = Config::load();
 
-    if !config.redirect_streams {
+    if !config.redirect_streams.enabled {
         // If redirect_streams is false, return an empty router
         return Router::new();
     }
@@ -30,7 +30,8 @@ pub fn routes() -> Router {
 async fn redirect_stream(req: &mut Request, res: &mut Response) {
     let config = Config::load();
     let redirect_url = config
-        .redirect_streams_host
+        .redirect_streams
+        .host
         .clone()
         .or_else(|| Some(config.host.clone()));
 

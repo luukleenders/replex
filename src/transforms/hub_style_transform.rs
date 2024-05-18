@@ -23,7 +23,7 @@ impl Transform for HubStyleTransform {
         plex_client: &PlexClient,
         options: &PlexContext,
     ) -> Result<()> {
-        // TODO: Check why tries to load non existing collectiin? my guess is no access
+        // TODO: Check why tries to load non existing collection? my guess is no access
         if !item.is_hub() || !item.is_hero(plex_client).await.unwrap_or(false) {
             return Ok(());
         }

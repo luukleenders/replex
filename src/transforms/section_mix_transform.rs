@@ -31,10 +31,9 @@ impl Transform for SectionMixTransform {
             return Ok(());
         }
 
-        // These are (or should be anyway) the same for all collections so we can just use the first one
+        // These are (or should be anyway) the same for all collections
         let first_id = self.collection_ids[0];
-        let mut collection = match Collection::get(plex_client, first_id).await
-        {
+        let mut collection = match Collection::get(plex_client, first_id).await {
             Ok(c) => c,
             Err(e) => {
                 tracing::error!(error = %e, "Failed to get collection");
@@ -45,8 +44,6 @@ impl Transform for SectionMixTransform {
         let children = collection.children();
         let collection_title = children.first().unwrap().title.clone();
 
-        dbg!(&collection_title);
-
         // Get all children for each collection
         for &id in &self.collection_ids {
             let (limit, offset) = if !exclude_watched {
@@ -55,24 +52,14 @@ impl Transform for SectionMixTransform {
                 (250, 0)
             };
 
-            let mut children = CollectionChildren::get(
-                plex_client,
-                id,
-                Some(offset),
-                Some(limit),
-            )
-            .await
-            .unwrap();
-
-            let lenght = children.children().len() as i32;
+            let mut children =
+                CollectionChildren::get(plex_client, id, Some(offset), Some(limit))
+                    .await
+                    .unwrap();
 
             if exclude_watched {
                 children.children_mut().retain(|c| !c.is_watched());
             }
-
-            let difference = lenght - children.children().len() as i32;
-
-            dbg!(difference);
 
             total_size += children.children().len() as i32;
 

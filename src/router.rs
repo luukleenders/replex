@@ -21,7 +21,7 @@ pub fn main_router() -> Router {
         .hoop(cors)
         .hoop(compression)
         .hoop(Logger)
-        .hoop(Timeout)
+        .hoop(Timeout::default())
         // .hoop(DisableRelatedQuery)
         // Push the routes for the various endpoints
         .push(common_routes())

@@ -24,7 +24,7 @@ impl Transform for HubMixTransform {
 
         let mut new_hubs: Vec<MetaData> = Vec::new();
 
-        for hub in &container.hub {
+        for hub in &mut container.hub {
             if hub.size.unwrap_or_default() == 0 {
                 continue;
             }

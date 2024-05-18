@@ -403,14 +403,14 @@ impl MetaData {
     pub async fn better_on_deck(&mut self, plex_client: &PlexClient) {
         let config = Config::load();
 
-        if config.better_on_deck {
-            if let Some(in_progress) = &config.in_progress {
+        if config.better_on_deck.enabled {
+            if let Some(in_progress) = &config.better_on_deck.in_progress {
                 if &self.title == in_progress {
                     sort_by_last_viewed(plex_client, self.children_mut()).await;
                 }
             }
 
-            if let Some(next_up) = &config.next_up {
+            if let Some(next_up) = &config.better_on_deck.next_up {
                 if &self.title == next_up {
                     sort_by_last_viewed(plex_client, self.children_mut()).await;
                 }

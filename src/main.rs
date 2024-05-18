@@ -11,9 +11,14 @@ use replex::router::main_router;
 async fn main() {
     dotenv::dotenv().ok();
 
-    let host = env::var("REPLEX_HOST").expect("REPLEX_HOST must be set!");
     let version = env!("CARGO_PKG_VERSION");
     let config = Config::load();
+    let host = env::var("REPLEX_HOST").unwrap_or_else(|_| config.host.clone());
+
+    if host.is_empty() {
+        panic!("Host is not set!");
+    }
+
     let _init_cache = CACHE_MANAGER.clone();
 
     tracing::subscriber::set_global_default(

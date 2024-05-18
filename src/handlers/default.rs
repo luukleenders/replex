@@ -13,7 +13,6 @@ pub async fn handler(
     req: &mut Request,
     res: &mut Response,
 ) -> Result<(), anyhow::Error> {
-    dbg!("DEFAULT");
     let config = Config::load();
     let params: PlexContext = req.extract().await?;
     let plex_client = PlexClient::from_request(req, &params);

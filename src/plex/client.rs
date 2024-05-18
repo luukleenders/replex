@@ -49,8 +49,6 @@ impl PlexClient {
             }
         };
 
-        dbg!(url.clone());
-
         self.request(Method::GET, &url, None).await
     }
 

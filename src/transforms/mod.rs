@@ -8,6 +8,7 @@ mod media_style_transform;
 mod reorder_hubs_transform;
 mod section_directory_transform;
 mod section_mix_transform;
+mod supplement_hub_transform;
 mod utils;
 
 pub use collection_style_transform::CollectionStyleTransform;
@@ -20,6 +21,7 @@ pub use media_style_transform::MediaStyleTransform;
 pub use reorder_hubs_transform::ReorderHubsTransform;
 pub use section_directory_transform::SectionDirectoryTransform;
 pub use section_mix_transform::SectionMixTransform;
+pub use supplement_hub_transform::SupplementHubTransform;
 pub use utils::filter::Filter;
 pub use utils::transform::Transform;
 pub use utils::transform_builder::TransformBuilder;

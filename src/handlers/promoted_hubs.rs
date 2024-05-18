@@ -5,13 +5,8 @@ use crate::config::Config;
 use crate::models::{MediaContainer, Platform, WrappedMediaContainer};
 use crate::plex::client::PlexClient;
 use crate::plex::models::PlexContext;
-use crate::transforms::{HubKeyTransform, TransformBuilder};
-// use crate::transforms::{SectionDirectoryTransform, ExcludeWatchedTransform};
+use crate::transforms::*;
 use crate::utils::*;
-
-use crate::transforms::{
-    HubMixTransform, HubStyleTransform, ReorderHubsTransform,
-};
 
 #[handler]
 pub async fn handler(
@@ -55,40 +50,21 @@ pub async fn handler(
     Ok(())
 }
 
-fn adjust_query_params(
-    req: &mut Request,
-    params: &PlexContext,
-    _config: &Config,
-) {
+fn adjust_query_params(req: &mut Request, params: &PlexContext, _config: &Config) {
     if let Some(pinned_id) = &params.pinned_content_directory_id {
         let pinned_ids = pinned_id.iter().join(",");
-        add_query_param_salvo(
-            req,
-            "contentDirectoryID".to_string(),
-            pinned_ids,
-        );
+        add_query_param_salvo(req, "contentDirectoryID".to_string(), pinned_ids);
+    }
+
+    let mut count = params.count.unwrap_or(25);
+    if params.platform == Platform::Android {
+        // Android doesn't do pagination so we to fetch more items.
+        count = 50;
     }
 
     // Always include GUIDs for banners.
     add_query_param_salvo(req, "includeGuids".to_string(), "1".to_string());
-
-    // Adjust 'count' based on platform, config, etc.
-    let mut count = params.count.unwrap_or(25);
-    // let mut count = 10;
-
-    if params.platform == Platform::Android {
-        count = 50; // Android-specific adjustment
-    }
-
-    // if config.exclude_watched && count < 50 {
-    //     count = 50; // General adjustment for excluding watched items
-    // }
-
-    dbg!(count);
-
     add_query_param_salvo(req, "count".to_string(), count.to_string());
-
-    // Add more parameter adjustments as needed.
 }
 
 async fn fetch_and_transform_upstream_data(
@@ -111,15 +87,15 @@ async fn fetch_and_transform_upstream_data(
     }
 
     // Deserialize the upstream response.
-    let mut container =
-        MediaContainer::from_reqwest_response(upstream_res).await?;
+    let mut container = MediaContainer::from_reqwest_response(upstream_res).await?;
 
     TransformBuilder::new(plex_client, params)
-        // .with_transform(SectionDirectoryTransform)
+        .with_transform(SectionDirectoryTransform)
+        .with_transform(ExcludeWatchedTransform)
+        .with_transform(SupplementHubTransform)
         .with_transform(HubMixTransform)
         .with_transform(ReorderHubsTransform)
         .with_transform(HubStyleTransform { is_home: true })
-        // .with_transform(ExcludeWatchedTransform)
         .with_transform(HubKeyTransform)
         .apply_to(&mut container)
         .await

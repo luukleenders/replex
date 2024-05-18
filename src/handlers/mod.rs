@@ -10,7 +10,6 @@ mod proxy_request;
 mod section_hubs;
 mod test;
 mod video_transcode_fallback;
-// mod websocket;
 
 pub use common_handlers::{
     empty_media_container_handler, photo_request_handler, ping,
@@ -26,4 +25,3 @@ pub use proxy_request::handler as proxy_request_handler;
 pub use section_hubs::handler as section_hubs_handler;
 pub use test::handler as test_handler;
 pub use video_transcode_fallback::handler as video_transcode_fallback_handler;
-// pub use websocket::handler as websocket_handler;

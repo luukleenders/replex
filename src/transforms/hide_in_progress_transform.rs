@@ -14,12 +14,14 @@ pub struct HideInProgressTransform;
 #[async_trait]
 impl Transform for HideInProgressTransform {
     async fn transform_mediacontainer(
-        &self, container: &mut MediaContainer, _plex_client: &PlexClient,
+        &self,
+        container: &mut MediaContainer,
+        _plex_client: &PlexClient,
         _options: &PlexContext,
     ) -> Result<()> {
         let config = Config::load();
 
-        if container.hub.is_empty() || !config.disable_continue_watching {
+        if container.hub.is_empty() || !config.better_on_deck.enabled {
             return Ok(());
         }
 
