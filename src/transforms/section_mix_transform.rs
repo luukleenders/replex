@@ -57,13 +57,9 @@ impl Transform for SectionMixTransform {
                     .await
                     .unwrap();
 
-            // let lenght = children.children().len() as i32;
-
             if exclude_watched {
                 children.children_mut().retain(|c| !c.is_watched());
             }
-
-            // let difference = lenght - children.children().len() as i32;
 
             total_size += children.children().len() as i32;
 
