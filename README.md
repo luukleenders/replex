@@ -37,7 +37,6 @@ auto_select_version: true
 # does not prevent transcoding if the client does not support the codec.
 force_maximum_quality: true
 
-
 # If a transcode for this quality is triggered, fall back to a lower quality
 transcode_fallback_for: "4K"
 

@@ -5,15 +5,8 @@ use crate::config::Config;
 use crate::models::{MediaContainer, Platform, WrappedMediaContainer};
 use crate::plex::client::PlexClient;
 use crate::plex::models::PlexContext;
-use crate::transforms::{
-    ExcludeWatchedTransform, HubKeyTransform, SectionDirectoryTransform,
-    TransformBuilder,
-};
+use crate::transforms::*;
 use crate::utils::*;
-
-use crate::transforms::{
-    HubMixTransform, HubStyleTransform, ReorderHubsTransform,
-};
 
 #[handler]
 pub async fn handler(
@@ -57,18 +50,10 @@ pub async fn handler(
     Ok(())
 }
 
-fn adjust_query_params(
-    req: &mut Request,
-    params: &PlexContext,
-    _config: &Config,
-) {
+fn adjust_query_params(req: &mut Request, params: &PlexContext, _config: &Config) {
     if let Some(pinned_id) = &params.pinned_content_directory_id {
         let pinned_ids = pinned_id.iter().join(",");
-        add_query_param_salvo(
-            req,
-            "contentDirectoryID".to_string(),
-            pinned_ids,
-        );
+        add_query_param_salvo(req, "contentDirectoryID".to_string(), pinned_ids);
     }
 
     // Always include GUIDs for banners.
@@ -76,7 +61,7 @@ fn adjust_query_params(
 
     // Adjust 'count' based on platform, config, etc.
     let mut count = params.count.unwrap_or(25);
-    // let mut count = 10;
+    // let mut count = 1;
 
     if params.platform == Platform::Android {
         count = 50; // Android-specific adjustment
@@ -113,8 +98,7 @@ async fn fetch_and_transform_upstream_data(
     }
 
     // Deserialize the upstream response.
-    let mut container =
-        MediaContainer::from_reqwest_response(upstream_res).await?;
+    let mut container = MediaContainer::from_reqwest_response(upstream_res).await?;
 
     TransformBuilder::new(plex_client, params)
         .with_transform(SectionDirectoryTransform)
