@@ -56,26 +56,15 @@ fn adjust_query_params(req: &mut Request, params: &PlexContext, _config: &Config
         add_query_param_salvo(req, "contentDirectoryID".to_string(), pinned_ids);
     }
 
-    // Always include GUIDs for banners.
-    add_query_param_salvo(req, "includeGuids".to_string(), "1".to_string());
-
-    // Adjust 'count' based on platform, config, etc.
     let mut count = params.count.unwrap_or(25);
-    // let mut count = 1;
-
     if params.platform == Platform::Android {
-        count = 50; // Android-specific adjustment
+        // Android doesn't do pagination so we to fetch more items.
+        count = 50;
     }
 
-    // if config.exclude_watched && count < 50 {
-    //     count = 50; // General adjustment for excluding watched items
-    // }
-
-    // dbg!(count);
-
+    // Always include GUIDs for banners.
+    add_query_param_salvo(req, "includeGuids".to_string(), "1".to_string());
     add_query_param_salvo(req, "count".to_string(), count.to_string());
-
-    // Add more parameter adjustments as needed.
 }
 
 async fn fetch_and_transform_upstream_data(
@@ -102,10 +91,11 @@ async fn fetch_and_transform_upstream_data(
 
     TransformBuilder::new(plex_client, params)
         .with_transform(SectionDirectoryTransform)
+        .with_transform(ExcludeWatchedTransform)
+        .with_transform(SupplementHubTransform)
         .with_transform(HubMixTransform)
         .with_transform(ReorderHubsTransform)
         .with_transform(HubStyleTransform { is_home: true })
-        .with_transform(ExcludeWatchedTransform)
         .with_transform(HubKeyTransform)
         .apply_to(&mut container)
         .await

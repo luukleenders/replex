@@ -2,11 +2,9 @@ use anyhow::Result;
 use async_trait::async_trait;
 use itertools::Itertools;
 
-use crate::config::Config;
 use crate::models::{MediaContainer, MetaData};
 use crate::plex::client::PlexClient;
 use crate::plex::models::PlexContext;
-use crate::plex::traits::CollectionChildren;
 use crate::transforms::Transform;
 
 #[derive(Default, Debug)]
@@ -24,28 +22,11 @@ impl Transform for HubMixTransform {
             return Ok(());
         }
 
-        let config = Config::load();
         let mut new_hubs: Vec<MetaData> = Vec::new();
 
         for hub in &mut container.hub {
             if hub.size.unwrap_or_default() == 0 {
                 continue;
-            }
-
-            if let (Some(in_progress), Some(next_up)) = (
-                &config.better_on_deck.in_progress,
-                &config.better_on_deck.next_up,
-            ) {
-                if hub.title == *in_progress || hub.title == *next_up {
-                    if let Some(id) = id_from_key(hub.key.as_ref().unwrap()) {
-                        let mut children =
-                            CollectionChildren::get(plex_client, id, None, None)
-                                .await
-                                .unwrap();
-
-                        hub.metadata = children.children();
-                    }
-                }
             }
 
             // Find the position of an existing hub with the same title
@@ -94,16 +75,6 @@ impl Transform for HubMixTransform {
 
         Ok(())
     }
-}
-
-pub fn id_from_key(key: &str) -> Option<i64> {
-    let key_string = key
-        .replace("/hubs/library/collections/", "")
-        .replace("/library/collections/", "")
-        .replace("/children", "")
-        .replace('/', "");
-
-    key_string.parse::<i64>().ok()
 }
 
 pub fn merge_hub_keys(keys: &[&str]) -> String {
