@@ -45,8 +45,6 @@ impl Transform for SectionMixTransform {
         let children = collection.children();
         let collection_title = children.first().unwrap().title.clone();
 
-        dbg!(&collection_title);
-
         // Get all children for each collection
         for &id in &self.collection_ids {
             let (limit, offset) = if !exclude_watched {
@@ -64,15 +62,13 @@ impl Transform for SectionMixTransform {
             .await
             .unwrap();
 
-            let lenght = children.children().len() as i32;
+            // let lenght = children.children().len() as i32;
 
             if exclude_watched {
                 children.children_mut().retain(|c| !c.is_watched());
             }
 
-            let difference = lenght - children.children().len() as i32;
-
-            dbg!(difference);
+            // let difference = lenght - children.children().len() as i32;
 
             total_size += children.children().len() as i32;
 

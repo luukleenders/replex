@@ -5,8 +5,10 @@ use crate::config::Config;
 use crate::models::{MediaContainer, Platform, WrappedMediaContainer};
 use crate::plex::client::PlexClient;
 use crate::plex::models::PlexContext;
-use crate::transforms::{HubKeyTransform, TransformBuilder};
-// use crate::transforms::{SectionDirectoryTransform, ExcludeWatchedTransform};
+use crate::transforms::{
+    ExcludeWatchedTransform, HubKeyTransform, SectionDirectoryTransform,
+    TransformBuilder,
+};
 use crate::utils::*;
 
 use crate::transforms::{
@@ -84,7 +86,7 @@ fn adjust_query_params(
     //     count = 50; // General adjustment for excluding watched items
     // }
 
-    dbg!(count);
+    // dbg!(count);
 
     add_query_param_salvo(req, "count".to_string(), count.to_string());
 
@@ -115,11 +117,11 @@ async fn fetch_and_transform_upstream_data(
         MediaContainer::from_reqwest_response(upstream_res).await?;
 
     TransformBuilder::new(plex_client, params)
-        // .with_transform(SectionDirectoryTransform)
+        .with_transform(SectionDirectoryTransform)
         .with_transform(HubMixTransform)
         .with_transform(ReorderHubsTransform)
         .with_transform(HubStyleTransform { is_home: true })
-        // .with_transform(ExcludeWatchedTransform)
+        .with_transform(ExcludeWatchedTransform)
         .with_transform(HubKeyTransform)
         .apply_to(&mut container)
         .await
