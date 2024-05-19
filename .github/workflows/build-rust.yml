@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   setup:
+    name: Build Matrix
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.result }}
