@@ -23,8 +23,8 @@ jobs:
     name: Setup Matrix
     runs-on: ubuntu-latest
     outputs:
-      docker: ${{ steps.set-matrix.outputs.docker }}
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      docker: ${{ steps.set-matrix.outputs.result.docker }}
+      matrix: ${{ steps.set-matrix.outputs.result.matrix }}
 
     steps:
       - name: Set matrix
@@ -86,16 +86,15 @@ jobs:
               },
             }
 
-            const dockerPlatforms = platforms
+            const docker = platforms
               .map(platform => platformMap[platform]?.docker)
-              .filter(platform => platform)
+              .filter(platform => platform).join(",")
             
-            const matrix = platforms
+            const matrix = JSON.stringify(platforms
               .map(platform => platformMap[platform])
-              .filter(platform => platform)
+              .filter(platform => platform))
             
-            core.setOutput("docker", dockerPlatforms.join(","))
-            core.setOutput("matrix", matrix)
+            core.setOutput("result", { matrix, docker })
 
   log:
     name: Log
@@ -104,10 +103,8 @@ jobs:
     if: needs.setup.outputs.matrix
     steps:
       - uses: actions/checkout@v4
-      - run: echo ${{ needs.setup.outputs.matrix }}
+      - run: echo ${{ fromJson(needs.setup.outputs.matrix) }}
       - run: echo ${{ needs.setup.outputs.docker }}
-
-
 
   build:
     name: ${{ matrix.platform.release_for }}
@@ -117,7 +114,7 @@ jobs:
       platforms: ${{ steps.collect-platforms.outputs.platforms }}
     
     strategy:
-      matrix: ${{ needs.setup.outputs.matrix }}
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v4
