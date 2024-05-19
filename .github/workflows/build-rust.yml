@@ -1,0 +1,86 @@
+name: Build Rust binaries
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: Platforms to build for (comma-separated list)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          platforms="${{ github.event.inputs.platform }}"
+          matrix=$(echo $platforms | jq -R 'split(",") | map(
+            if . == "x86_64 Linux" then {
+              release_for: "x86_64 Linux",
+              os: "ubuntu-22.04",
+              docker: "linux/amd64",
+              target: "x86_64-unknown-linux-gnu",
+              bin: "replex",
+              name: "x86_64-unknown-linux-gnu.tar.gz",
+              command: "build"
+            } elif . == "ARM64 Linux" then {
+              release_for: "ARM64 Linux",
+              os: "ubuntu-22.04",
+              docker: "linux/arm64",
+              target: "aarch64-unknown-linux-gnu",
+              bin: "replex",
+              name: "aarch64-unknown-linux-gnu.tar.gz",
+              command: "build"
+            } elif . == "x86_64 macOS" then {
+              release_for: "x86_64 macOS",
+              os: "macOS-latest",
+              docker: "darwin/amd64",
+              target: "x86_64-apple-darwin",
+              bin: "replex",
+              name: "x86_64-apple-darwin.tar.gz",
+              command: "build"
+            } elif . == "ARM64 macOS" then {
+              release_for: "ARM64 macOS",
+              os: "macOS-latest",
+              target: "aarch64-apple-darwin",
+              bin: "replex",
+              name: "aarch64-apple-darwin.tar.gz",
+              command: "build"
+            } elif . == "x86_64 Windows" then {
+              release_for: "x86_64 Windows",
+              os: "windows-latest",
+              target: "x86_64-pc-windows-msvc",
+              bin: "replex.exe",
+              name: "precious-Windows-x86_64.zip",
+              command: "build"
+            } else empty end)
+          ')
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+
+  build:
+    needs: setup
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      
+      - name: Cache cargo & target directories
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.platform.target }}
+          shared-key: ${{ runner.os }}-cargox
+          cache-on-failure: true
+
+      - name: Build binary
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: ${{ matrix.platform.command }}
+          target: ${{ matrix.platform.target }}
