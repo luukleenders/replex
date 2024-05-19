@@ -35,6 +35,7 @@ jobs:
           repo-token: ${{ secrets.REPLEX_PAT }}
 
   build:
+    name: Build
     needs: [validate, label]
     if: github.head_ref != 'chore/update-version'
     uses: ./.github/workflows/build-rust.yml
