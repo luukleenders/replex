@@ -7,6 +7,13 @@ on:
         description: Platforms to build for (comma-separated list)
         required: true
         type: string
+      release:
+        description: Whether to build for release or not
+        required: false
+        type: boolean
+    outputs:
+      platforms: 
+        value: ${{ jobs.build.outputs.platforms }}
 
 permissions:
   contents: read
@@ -16,78 +23,90 @@ jobs:
     name: Setup Matrix
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.result }}
+      docker: ${{ steps.set-matrix.outputs.result.docker }}
+      matrix: ${{ steps.set-matrix.outputs.result.matrix }}
 
     steps:
       - name: Set matrix
         id: set-matrix
         uses: actions/github-script@v7
         with:
-          result-encoding: string
           script: |
+            const command = "${{ inputs.release }} ? 'build --locked --release' : 'build'"
+            const profile = "${{ inputs.release }} ? 'release' : 'debug'"
             const platforms = "${{ inputs.platform }}".split(",").map(platform => platform.trim())
-            const matrix = platforms.map(platform => {
-              if (platform === "x86_64 Linux") {
-                return {
-                  release_for: "x86_64 Linux",
-                  os: "ubuntu-22.04",
-                  docker: "linux/amd64",
-                  target: "x86_64-unknown-linux-gnu",
-                  bin: "replex",
-                  name: "x86_64-unknown-linux-gnu.tar.gz",
-                  command: "build"
-                }
-              } else if (platform === "ARM64 Linux") {
-                return {
-                  release_for: "ARM64 Linux",
-                  os: "ubuntu-22.04",
-                  docker: "linux/arm64",
-                  target: "aarch64-unknown-linux-gnu",
-                  bin: "replex",
-                  name: "aarch64-unknown-linux-gnu.tar.gz",
-                  command: "build"
-                }
-              } else if (platform === "x86_64 macOS") {
-                return {
-                  release_for: "x86_64 macOS",
-                  os: "macOS-latest",
-                  docker: "darwin/amd64",
-                  target: "x86_64-apple-darwin",
-                  bin: "replex",
-                  name: "x86_64-apple-darwin.tar.gz",
-                  command: "build"
-                }
-              } else if (platform === "ARM64 macOS") {
-                return {
-                  release_for: "ARM64 macOS",
-                  os: "macOS-latest",
-                  target: "aarch64-apple-darwin",
-                  bin: "replex",
-                  name: "aarch64-apple-darwin.tar.gz",
-                  command: "build"
-                }
-              } else if (platform === "x86_64 Windows") {
-                return {
-                  release_for: "x86_64 Windows",
-                  os: "windows-latest",
-                  target: "x86_64-pc-windows-msvc",
-                  bin: "replex.exe",
-                  name: "precious-Windows-x86_64.zip",
-                  command: "build"
-                }
-              } else {
-                return null
-              }
-            })
-            .filter(platform => platform !== null)
+            const platformMap = {
+              "X86_64 Linux": {
+                release_for: "x86_64 Linux",
+                os: "ubuntu-22.04",
+                docker: "linux/amd64",
+                target: "x86_64-unknown-linux-gnu",
+                bin: "replex",
+                name: "x86_64-unknown-linux-gnu.tar.gz",
+                command,
+                profile,
+              },
+              "ARM64 Linux": {
+                release_for: "ARM64 Linux",
+                os: "ubuntu-22.04",
+                docker: "linux/arm64",
+                target: "aarch64-unknown-linux-gnu",
+                bin: "replex",
+                name: "aarch64-unknown-linux-gnu.tar.gz",
+                command,
+                profile,
+              },
+              "X86_64 macOS": {
+                release_for: "x86_64 macOS",
+                os: "macOS-latest",
+                docker: "darwin/amd64",
+                target: "x86_64-apple-darwin",
+                bin: "replex",
+                name: "x86_64-apple-darwin.tar.gz",
+                command,
+                profile,
+              },
+              "ARM64 macOS": {
+                release_for: "ARM64 macOS",
+                os: "macOS-latest",
+                target: "aarch64-apple-darwin",
+                bin: "replex",
+                name: "aarch64-apple-darwin.tar.gz",
+                command,
+                profile,
+              },
+              "X86_64 Windows": {
+                release_for: "x86_64 Windows",
+                os: "windows-latest",
+                target: "x86_64-pc-windows-msvc",
+                bin: "replex.exe",
+                name: "precious-Windows-x86_64.zip",
+                command,
+                profile,
+              },
+            }
 
-            return JSON.stringify({ platform: matrix })
+            const dockerPlatforms = platforms
+              .map(platform => platformMap[platform]?.docker)
+              .filter(platform => platform)
+            
+            const matrix = platforms
+              .map(platform => platformMap[platform])
+              .filter(platform => platform)
+            
+            core.setOutput("docker", dockerPlatforms.join(","))
+            core.setOutput("matrix", JSON.stringify(matrix))
+
   build:
     name: ${{ matrix.platform.release_for }}
     needs: setup
     runs-on: ${{ matrix.platform.os }}
+    outputs:
+      platforms: ${{ steps.collect-platforms.outputs.platforms }}
+    
     strategy:
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -97,10 +116,25 @@ jobs:
         with:
           key: ${{ matrix.platform.target }}
           shared-key: ${{ runner.os }}-cargox
-          cache-on-failure: true
 
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v0
         with:
           command: ${{ matrix.platform.command }}
           target: ${{ matrix.platform.target }}
+
+      - name: Move binaries
+        shell: bash
+        run: |
+          mkdir -p bin/${{ matrix.platform.target }}
+          mv target/${{ matrix.platform.target }}/${{ matrix.platform.profile }}/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.target }}
+          path: bin/${{ matrix.platform.target }}
+
+      - name: Collect docker platforms
+        id: collect-platforms
+        run: echo "platforms=${{ matrix.platform.docker }}" >> $GITHUB_OUTPUT
