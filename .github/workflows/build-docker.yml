@@ -12,8 +12,8 @@ permissions:
   contents: read
 
 jobs:
-  setup:
-    name: Setup Docker
+  build:
+    name: Build & Push
     runs-on: ubuntu-latest
   
     steps:
