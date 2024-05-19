@@ -1,8 +1,9 @@
 name: Pull Request
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, edited]
+  workflow_dispatch:
+  # pull_request:
+  #   types: [opened, synchronize, reopened, edited]
 
 env: 
   PLATFORMS:
