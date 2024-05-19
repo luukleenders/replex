@@ -1,17 +1,30 @@
 name: Docker build and push
-description: Builds and pushes a Docker image to GitHub Container Registry
 
-inputs:
-  token:
-    description: Token for Docker registry login
-    required: true
-  platform:
-    description: Platform to build for
-    required: true
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: Platforms to build for (comma-separated list)
+        required: true
+        type: string
 
-runs:
-  using: composite
-  steps:
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    name: Setup Docker
+    runs-on: ubuntu-latest
+  
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set Docker platform
+      id: set-docker
+      uses: ./.github/actions/map-docker
+      with:
+        platform: ${{ inputs.platform }}
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
@@ -29,7 +42,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
-        password: ${{ inputs.token }}
+        password: ${{ secrets.REPLEX_PAT }}
 
     - name: Docker meta
       id: meta
@@ -37,14 +50,6 @@ runs:
       with:
         images: |
           ghcr.io/${{ github.repository_owner }}/replex
-        tags: |
-          type=raw,value=latest,enable={{is_default_branch}}
-          type=ref,event=branch
-          type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=semver,pattern={{major}}
-          type=sha
         
     - name: Cache Docker layers
       uses: actions/cache@v4
@@ -58,7 +63,7 @@ runs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        platforms: ${{ inputs.platform }}
+        platforms: ${{ steps.set-docker.outputs.platform }}
         file: .github/Dockerfile
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}

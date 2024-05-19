@@ -1,0 +1,83 @@
+name: 'Set Build Matrix'
+description: 'Generates a build matrix for the provided platforms and build types.'
+inputs:
+  platform:
+    description: 'Comma-separated list of platforms to build for.'
+    required: true
+  release:
+    description: 'Boolean to determine if the build should be for release.'
+    required: true
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set matrix
+      id: set-matrix
+      uses: actions/github-script@v7
+      with:
+        result-encoding: 'string'
+        script: |
+          const command = ${{ inputs.release }} ? "build --locked --release" : "build"
+          const profile = ${{ inputs.release }} ? "release" : "debug"
+          const platforms = "${{ inputs.platform }}".split(",").map(platform => platform.trim())
+          const platformMap = {
+            "x86_64 Linux": {
+              release_for: "x86_64 Linux",
+              os: "ubuntu-22.04",
+              docker: "linux/amd64",
+              target: "x86_64-unknown-linux-gnu",
+              bin: "replex",
+              name: "x86_64-unknown-linux-gnu.tar.gz",
+              command,
+              profile,
+            },
+            "ARM64 Linux": {
+              release_for: "ARM64 Linux",
+              os: "ubuntu-22.04",
+              docker: "linux/arm64",
+              target: "aarch64-unknown-linux-gnu",
+              bin: "replex",
+              name: "aarch64-unknown-linux-gnu.tar.gz",
+              command,
+              profile,
+            },
+            "x86_64 macOS": {
+              release_for: "x86_64 macOS",
+              os: "macOS-latest",
+              docker: "darwin/amd64",
+              target: "x86_64-apple-darwin",
+              bin: "replex",
+              name: "x86_64-apple-darwin.tar.gz",
+              command,
+              profile,
+            },
+            "ARM64 macOS": {
+              release_for: "ARM64 macOS",
+              os: "macOS-latest",
+              target: "aarch64-apple-darwin",
+              bin: "replex",
+              name: "aarch64-apple-darwin.tar.gz",
+              command,
+              profile,
+            },
+            "x86_64 Windows": {
+              release_for: "x86_64 Windows",
+              os: "windows-latest",
+              target: "x86_64-pc-windows-msvc",
+              bin: "replex.exe",
+              name: "precious-Windows-x86_64.zip",
+              command,
+              profile,
+            },
+          }
+
+          const matrix = platforms
+            .map(platform => platformMap[platform])
+            .filter(platform => platform)
+
+          return JSON.stringify({ platform: matrix })
+outputs:
+  matrix:
+    description: 'JSON string containing the matrix configuration for builds.'
+    value: ${{ steps.set-matrix.outputs.result }}

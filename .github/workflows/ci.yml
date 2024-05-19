@@ -1,0 +1,74 @@
+name: CI Workflow
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build for
+        type: choice
+        default: linux
+        options: ["all", "linux", "macos", "windows"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  set-platform:
+    name: Set platform
+    runs-on: ubuntu-latest
+    outputs:
+      platform: ${{ steps.set-platform.outputs.result }}
+
+    steps:
+      - name: Set platform
+        id: set-platform
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            const ref = "${{ github.ref }}";
+            const eventName = "${{ github.event_name }}";
+            
+            const platformMap = {
+              all: "x86_64 Linux, ARM64 Linux, x86_64 macOS, ARM64 macOS, x86_64 Windows",
+              linux: "x86_64 Linux, ARM64 Linux",
+              macos: "x86_64 macOS, ARM64 macOS",
+              windows: "x86_64 Windows",
+            }
+            
+            if (ref.startsWith('refs/tags/v')) {
+              return platformMap['all']
+            }
+
+            if (eventName === 'workflow_dispatch') {
+              return platformMap["${{ github.event.inputs.platform }}"];
+            }
+            
+            return platformMap["linux"];
+
+  build-rust:
+    name: Build
+    needs: set-platform
+    uses: ./.github/workflows/build-rust.yml
+    secrets: inherit
+    with:
+      platform: ${{ needs.set-platform.outputs.platform }}
+      release: ${{ github.event_name == 'release' }}
+
+  build-docker:
+    name: Build and push Docker image
+    needs: [set-platform, build-rust]
+    uses: ./.github/workflows/build-docker.yml
+    secrets: inherit
+    with:
+      platform: ${{ needs.set-platform.outputs.platform }}

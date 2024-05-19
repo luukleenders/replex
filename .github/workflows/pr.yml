@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
 jobs:
@@ -34,36 +34,10 @@ jobs:
         with:
           repo-token: ${{ secrets.REPLEX_PAT }}
 
-  build:
-    name: Build - ${{ matrix.platform.release_for }}
+  build-rust:
+    name: Build
     needs: [validate, label]
-    if: github.head_ref != 'chore/update-version'
-    runs-on: ${{ matrix.platform.os }}
-
-    strategy:
-      matrix:
-        platform:
-          - release_for: x86_64 Linux
-            os: ubuntu-22.04
-            docker: linux/amd64
-            target: x86_64-unknown-linux-gnu
-            bin: replex
-            name: x86_64-unknown-linux-gnu.tar.gz
-            command: build
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      
-      - name: Cache cargo & target directories
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: ${{ matrix.platform.target }}
-          shared-key: ${{ runner.os }}-cargox
-          cache-on-failure: true
-
-      - name: Build binary
-        uses: houseabsolute/actions-rust-cross@v0
-        with:
-          command: ${{ matrix.platform.command }}
-          target: ${{ matrix.platform.target }}
+    uses: ./.github/workflows/build-rust.yml
+    secrets: inherit
+    with:
+      platform: "x86_64 Linux"

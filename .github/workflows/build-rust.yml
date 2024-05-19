@@ -1,0 +1,68 @@
+name: Build Rust binaries
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: Platforms to build for (comma-separated list)
+        required: true
+        type: string
+      release:
+        description: Whether to build for release or not
+        required: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    name: Setup Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set matrix
+        id: set-matrix
+        uses: ./.github/actions/map-matrix
+        with:
+          platform: ${{ inputs.platform }}
+          release: ${{ inputs.release }}
+
+  build:
+    name: ${{ matrix.platform.release_for }}
+    needs: setup
+    runs-on: ${{ matrix.platform.os }}
+    
+    strategy:
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      
+      - name: Cache cargo & target directories
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.platform.target }}
+          shared-key: ${{ runner.os }}-cargox
+
+      - name: Build binary
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: ${{ matrix.platform.command }}
+          target: ${{ matrix.platform.target }}
+
+      - name: Move binaries
+        shell: bash
+        run: |
+          mkdir -p bin/${{ matrix.platform.target }}
+          mv target/${{ matrix.platform.target }}/${{ matrix.platform.profile }}/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.target }}
+          path: bin/${{ matrix.platform.target }}
