@@ -38,4 +38,4 @@ jobs:
     uses: ./.github/workflows/build-rust.yml
     secrets: inherit
     with:
-      platform: "x86_64 Linux, ARM64 Linux"
+      platform: "x86_64 Linux"
