@@ -67,12 +67,13 @@ jobs:
 
   build-rust:
     name: Rust
-    needs: set-platform
+    needs: [set-platform, build-cache]
     uses: ./.github/workflows/build-rust.yml
     secrets: inherit
     with:
       platform: ${{ needs.set-platform.outputs.platform }}
       release: ${{ github.event_name == 'release' }}
+      upload: true
 
   build-docker:
     name: Docker
