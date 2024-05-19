@@ -76,9 +76,10 @@ jobs:
                   command: "build"
                 }
               } else {
-                return {}
+                return null
               }
             })
+            .filter(platform => platform !== null)
 
             return JSON.stringify({ platform: matrix })
   build:
