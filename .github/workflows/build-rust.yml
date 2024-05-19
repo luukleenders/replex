@@ -94,7 +94,7 @@ jobs:
               .map(platform => platformMap[platform])
               .filter(platform => platform)
 
-            console.log(JSON.stringify(matrix))
+            console.log(JSON.stringify({ platform: matrix }))
             
             core.setOutput("docker", dockerPlatforms.join(","))
             core.setOutput("matrix", JSON.stringify(matrix))
