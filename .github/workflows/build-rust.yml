@@ -25,9 +25,8 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const platforms = "${{ inputs.platform }}"
-
-            const matrix = platforms.split(",").map(platform => {
+            const platforms = "${{ inputs.platform }}".split(",").map(platform => platform.trim())
+            const matrix = platforms.map(platform => {
               if (platform === "x86_64 Linux") {
                 return {
                   release_for: "x86_64 Linux",
