@@ -37,8 +37,10 @@ jobs:
         with:
           result-encoding: string
           script: |
+            console.log("event_name:", "${{ github.event_name }}");
+
             let platform = "";
-            switch (github.event_name) {
+            switch (${{ github.event_name }}) {
               case 'push':
                 platform = "linux"
                 break
@@ -49,6 +51,8 @@ jobs:
                 platform = "${{ github.event.inputs.platform }}"
                 break
             }
+
+            console.log("platform:", platform);
 
             const platformMap = {
               all: "x86_64 Linux, ARM64 Linux, x86_64 macOS, ARM64 macOS, x86_64 Windows",
