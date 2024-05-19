@@ -11,6 +11,10 @@ on:
         description: Whether to build for release or not
         required: false
         type: boolean
+      upload:
+        description: Whether to upload the binaries or not
+        required: false
+        type: boolean
 
 permissions:
   contents: read
@@ -67,6 +71,7 @@ jobs:
           mv target/${{ matrix.platform.target }}/${{ matrix.platform.profile }}/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
 
       - name: Upload binaries
+        if: ${{ inputs.upload }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.target }}
