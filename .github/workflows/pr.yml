@@ -35,6 +35,7 @@ jobs:
           repo-token: ${{ secrets.REPLEX_PAT }}
 
   build:
+    needs: [validate, label]
     uses: ./.github/workflows/build-rust.yml
     secrets: inherit
     with:
