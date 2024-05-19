@@ -12,8 +12,8 @@ permissions:
   contents: read
 
 jobs:
-  setup:
-    name: Setup Docker
+  build:
+    name: Build & Push
     runs-on: ubuntu-latest
   
     steps:
@@ -34,7 +34,7 @@ jobs:
         path: ./bin
 
     - name: Setup QEMU
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@v3
 
     - name: Log in to GitHub container registry
       if: github.event_name != 'pull_request'
