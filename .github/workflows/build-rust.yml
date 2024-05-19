@@ -11,9 +11,6 @@ on:
         description: Whether to build for release or not
         required: false
         type: boolean
-    outputs:
-      docker:
-        value: ${{ jobs.setup.outputs.docker }}
 
 permissions:
   contents: read
@@ -23,24 +20,16 @@ jobs:
     name: Setup Matrix
     runs-on: ubuntu-latest
     outputs:
-      docker: ${{ steps.set-docker.outputs.platform }}
       matrix: ${{ steps.set-matrix.outputs.matrix }}
 
     steps:
       - uses: actions/checkout@v4
-
       - name: Set matrix
         id: set-matrix
-        uses: ./.github/actions/set-matrix
+        uses: ./.github/actions/map-matrix
         with:
           platform: ${{ inputs.platform }}
           release: ${{ inputs.release }}
-
-      - name: Set Docker platform
-        id: set-docker
-        uses: ./.github/actions/set-docker
-        with:
-          platform: ${{ inputs.platform }}
 
   build:
     name: ${{ matrix.platform.release_for }}

@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - chore/better-workflows
     tags:
       - 'v*'
   workflow_dispatch:
@@ -68,8 +67,8 @@ jobs:
 
   build-docker:
     name: Build and push Docker image
-    needs: build-rust
+    needs: [set-platform, build-rust]
     uses: ./.github/workflows/build-docker.yml
     secrets: inherit
     with:
-      platform: ${{ needs.build-rust.outputs.docker }}
+      platform: ${{ needs.set-platform.outputs.platform }}
