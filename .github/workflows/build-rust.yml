@@ -18,52 +18,68 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
 
     steps:
-      - id: set-matrix
-        run: |
-          platforms="${{ inputs.platform }}"
-          matrix=$(echo $platforms | jq -R 'split(",") | map(
-            if . == "x86_64 Linux" then {
-              "release_for": "x86_64 Linux",
-              "os": "ubuntu-22.04",
-              "docker": "linux/amd64",
-              "target": "x86_64-unknown-linux-gnu",
-              "bin": "replex",
-              "name": "x86_64-unknown-linux-gnu.tar.gz",
-              "command": "build"
-            } elif . == "ARM64 Linux" then {
-              "release_for": "ARM64 Linux",
-              "os": "ubuntu-22.04",
-              "docker": "linux/arm64",
-              "target": "aarch64-unknown-linux-gnu",
-              "bin": "replex",
-              "name": "aarch64-unknown-linux-gnu.tar.gz",
-              "command": "build"
-            } elif . == "x86_64 macOS" then {
-              "release_for": "x86_64 macOS",
-              "os": "macOS-latest",
-              "docker": "darwin/amd64",
-              "target": "x86_64-apple-darwin",
-              "bin": "replex",
-              "name": "x86_64-apple-darwin.tar.gz",
-              "command": "build"
-            } elif . == "ARM64 macOS" then {
-              "release_for": "ARM64 macOS",
-              "os": "macOS-latest",
-              "target": "aarch64-apple-darwin",
-              "bin": "replex",
-              "name": "aarch64-apple-darwin.tar.gz",
-              "command": "build"
-            } elif . == "x86_64 Windows" then {
-              "release_for": "x86_64 Windows",
-              "os": "windows-latest",
-              "target": "x86_64-pc-windows-msvc",
-              "bin": "replex.exe",
-              "name": "precious-Windows-x86_64.zip",
-              "command": "build"
-            } else empty end
-          )')
-          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+      - name: Set matrix
+        id: set-matrix
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const platforms = "${{ inputs.platform }}"
 
+            const matrix = platforms.split(",").map(platform => {
+              if (platform === "x86_64 Linux") {
+                return {
+                  release_for: "x86_64 Linux",
+                  os: "ubuntu-22.04",
+                  docker: "linux/amd64",
+                  target: "x86_64-unknown-linux-gnu",
+                  bin: "replex",
+                  name: "x86_64-unknown-linux-gnu.tar.gz",
+                  command: "build"
+                }
+              } else if (platform === "ARM64 Linux") {
+                return {
+                  release_for: "ARM64 Linux",
+                  os: "ubuntu-22.04",
+                  docker: "linux/arm64",
+                  target: "aarch64-unknown-linux-gnu",
+                  bin: "replex",
+                  name: "aarch64-unknown-linux-gnu.tar.gz",
+                  command: "build"
+                }
+              } else if (platform === "x86_64 macOS") {
+                return {
+                  release_for: "x86_64 macOS",
+                  os: "macOS-latest",
+                  docker: "darwin/amd64",
+                  target: "x86_64-apple-darwin",
+                  bin: "replex",
+                  name: "x86_64-apple-darwin.tar.gz",
+                  command: "build"
+                }
+              } else if (platform === "ARM64 macOS") {
+                return {
+                  release_for: "ARM64 macOS",
+                  os: "macOS-latest",
+                  target: "aarch64-apple-darwin",
+                  bin: "replex",
+                  name: "aarch64-apple-darwin.tar.gz",
+                  command: "build"
+                }
+              } else if (platform === "x86_64 Windows") {
+                return {
+                  release_for: "x86_64 Windows",
+                  os: "windows-latest",
+                  target: "x86_64-pc-windows-msvc",
+                  bin: "replex.exe",
+                  name: "precious-Windows-x86_64.zip",
+                  command: "build"
+                }
+              } else {
+                return {}
+              }
+            })
+
+            core.setOutput("matrix", JSON.stringify({ platform: matrix }))
   build:
     needs: setup
     runs-on: ${{ matrix.platform.os }}
