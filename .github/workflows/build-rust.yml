@@ -48,7 +48,7 @@ jobs:
       - name: Generate cache key
         id: cache-key
         run: |
-          if [${{ startsWith(github.ref, 'refs/tags/v') }} ]; then
+          if (${{ startsWith(github.ref, 'refs/tags/v') }} ); then
              echo "cache-key=${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-release" >> $GITHUB_OUTPUT
           else
             echo "cache-key=${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-debug" >> $GITHUB_OUTPUT
