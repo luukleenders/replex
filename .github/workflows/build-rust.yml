@@ -23,8 +23,8 @@ jobs:
     name: Setup Matrix
     runs-on: ubuntu-latest
     outputs:
-      docker: ${{ steps.set-matrix.outputs.result.docker }}
-      matrix: ${{ steps.set-matrix.outputs.result.matrix }}
+      docker: ${{ steps.set-matrix.outputs.docker }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
 
     steps:
       - name: Set matrix
@@ -86,15 +86,16 @@ jobs:
               },
             }
 
-            const docker = platforms
+            const dockerPlatforms = platforms
               .map(platform => platformMap[platform]?.docker)
-              .filter(platform => platform).join(",")
+              .filter(platform => platform)
             
-            const matrix = JSON.stringify(platforms
+            const matrix = platforms
               .map(platform => platformMap[platform])
-              .filter(platform => platform))
+              .filter(platform => platform)
             
-            core.setOutput("result", { matrix, docker })
+            core.setOutput("docker", dockerPlatforms.join(","))
+            core.setOutput("matrix", JSON.stringify(matrix))
 
   log:
     name: Log
