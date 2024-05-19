@@ -20,7 +20,7 @@ jobs:
       - id: set-matrix
         run: |
           platforms="${{ github.event.inputs.platform }}"
-          matrix=$(echo "${platforms}" | jq -R 'split(",") | map(
+          matrix=$(echo $platforms | jq -R 'split(",") | map(
             if . == "x86_64 Linux" then {
               release_for: "x86_64 Linux",
               os: "ubuntu-22.04",
