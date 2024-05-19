@@ -45,7 +45,25 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          if [ startsWith(github.ref, 'refs/tags/v') ]; then
+             echo "cache-key=${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-release" >> $GITHUB_OUTPUT
+             echo "restore-keys=${{ runner.os }}-cargo-*-release" >> $GITHUB_OUTPUT
+          else
+            echo "cache-key=${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-debug" >> $GITHUB_OUTPUT
+            echo "restore-keys=${{ runner.os }}-cargo-*-debug" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Wait for cache
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.ref }}
+          running-workflow-name: 'Build Rust cache'
+          repo-token: ${{ secrets.REPLEX_PAT }}
+          wait-interval: 10
+
       - name: Get cached dependencies
         uses: actions/cache/restore@v4
         with:
@@ -55,8 +73,8 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+          key: ${{ steps.cache-key.outputs.cache-key }}
+          restore-keys: ${{ steps.cache-key.outputs.restore-keys }}
 
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v0
