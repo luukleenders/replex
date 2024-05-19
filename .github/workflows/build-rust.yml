@@ -95,7 +95,7 @@ jobs:
               .filter(platform => platform)
             
             core.setOutput("docker", dockerPlatforms.join(","))
-            core.setOutput("matrix", JSON.stringify(matrix))
+            core.setOutput("matrix", matrix)
 
   log:
     name: Log
@@ -117,7 +117,7 @@ jobs:
       platforms: ${{ steps.collect-platforms.outputs.platforms }}
     
     strategy:
-      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+      matrix: ${{ needs.setup.outputs.matrix }}
 
     steps:
       - uses: actions/checkout@v4
