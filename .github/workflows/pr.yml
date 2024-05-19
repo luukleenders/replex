@@ -42,12 +42,3 @@ jobs:
     secrets: inherit
     with:
       platform: "x86_64 Linux, ARM64 Linux"
-
-  log:
-    name: Log
-    runs-on: ubuntu-latest
-    needs: build
-    if: needs.build.outputs.platforms
-    steps:
-      - uses: actions/checkout@v4
-      - run: echo ${{ needs.build.outputs.platforms }}
