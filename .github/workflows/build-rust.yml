@@ -36,7 +36,7 @@ jobs:
             const profile = ${{ inputs.release }} ? "release" : "debug"
             const platforms = "${{ inputs.platform }}".split(",").map(platform => platform.trim())
             const platformMap = {
-              "X86_64 Linux": {
+              "x86_64 Linux": {
                 release_for: "x86_64 Linux",
                 os: "ubuntu-22.04",
                 docker: "linux/amd64",
@@ -56,7 +56,7 @@ jobs:
                 command,
                 profile,
               },
-              "X86_64 macOS": {
+              "x86_64 macOS": {
                 release_for: "x86_64 macOS",
                 os: "macOS-latest",
                 docker: "darwin/amd64",
@@ -75,7 +75,7 @@ jobs:
                 command,
                 profile,
               },
-              "X86_64 Windows": {
+              "x86_64 Windows": {
                 release_for: "x86_64 Windows",
                 os: "windows-latest",
                 target: "x86_64-pc-windows-msvc",
@@ -104,7 +104,7 @@ jobs:
     if: needs.setup.outputs.matrix
     steps:
       - uses: actions/checkout@v4
-      - run: echo ${{ needs.setup.outputs.matrix }}
+      - run: echo ${{ fromJson(needs.setup.outputs.matrix) }}
       - run: echo ${{ needs.setup.outputs.docker }}
 
 
