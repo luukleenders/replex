@@ -104,7 +104,7 @@ jobs:
     if: needs.setup.outputs.matrix
     steps:
       - uses: actions/checkout@v4
-      - run: echo ${{ fromJson(needs.setup.outputs.matrix) }}
+      - run: echo ${{ needs.setup.outputs.matrix }}
       - run: echo ${{ needs.setup.outputs.docker }}
 
 
