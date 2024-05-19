@@ -67,7 +67,7 @@ jobs:
     needs: setup
     runs-on: ${{ matrix.platform.os }}
     strategy:
-      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+      matrix: ${{ needs.setup.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
