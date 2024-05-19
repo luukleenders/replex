@@ -1,0 +1,36 @@
+name: CI Workflow
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build for
+        type: choice
+        options: ["x86_64 Linux", "ARM64 Linux", "x86_64 macOS", "ARM64 macOS", "x86_64 Windows"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build-rust:
+    name: Build
+    uses: ./.github/workflows/build-rust.yml
+    with:
+      platform: "x86_64 Linux, ARM64 Linux"
+      release: true
+
+  build-docker:
+    name: Build and push Docker image
+    needs: build-rust
+    uses: ./.github/workflows/build-docker.yml
+    secrets: inherit
+    with:
+      platform: ${{ needs.build-rust.outputs.docker }}
