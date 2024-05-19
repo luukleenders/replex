@@ -23,8 +23,8 @@ jobs:
     name: Setup Matrix
     runs-on: ubuntu-latest
     outputs:
-      docker: ${{ steps.set-matrix.outputs.result.docker }}
-      matrix: ${{ steps.set-matrix.outputs.result.matrix }}
+      docker: ${{ steps.set-matrix.outputs.docker }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
 
     steps:
       - name: Set matrix
