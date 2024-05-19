@@ -12,8 +12,8 @@ on:
         required: false
         type: boolean
     outputs:
-      platforms: 
-        value: ${{ jobs.build.outputs.platforms }}
+      docker:
+        value: ${{ jobs.setup.outputs.docker }}
 
 permissions:
   contents: read
@@ -23,86 +23,27 @@ jobs:
     name: Setup Matrix
     runs-on: ubuntu-latest
     outputs:
-      docker: ${{ steps.set-matrix.outputs.docker }}
+      docker: ${{ steps.set-docker.outputs.platform }}
       matrix: ${{ steps.set-matrix.outputs.matrix }}
 
     steps:
       - name: Set matrix
         id: set-matrix
-        uses: actions/github-script@v7
+        uses: ./.github/actions/set-matrix
         with:
-          script: |
-            const command = ${{ inputs.release }} ? "build --locked --release" : "build"
-            const profile = ${{ inputs.release }} ? "release" : "debug"
-            const platforms = "${{ inputs.platform }}".split(",").map(platform => platform.trim())
-            const platformMap = {
-              "x86_64 Linux": {
-                release_for: "x86_64 Linux",
-                os: "ubuntu-22.04",
-                docker: "linux/amd64",
-                target: "x86_64-unknown-linux-gnu",
-                bin: "replex",
-                name: "x86_64-unknown-linux-gnu.tar.gz",
-                command,
-                profile,
-              },
-              "ARM64 Linux": {
-                release_for: "ARM64 Linux",
-                os: "ubuntu-22.04",
-                docker: "linux/arm64",
-                target: "aarch64-unknown-linux-gnu",
-                bin: "replex",
-                name: "aarch64-unknown-linux-gnu.tar.gz",
-                command,
-                profile,
-              },
-              "x86_64 macOS": {
-                release_for: "x86_64 macOS",
-                os: "macOS-latest",
-                docker: "darwin/amd64",
-                target: "x86_64-apple-darwin",
-                bin: "replex",
-                name: "x86_64-apple-darwin.tar.gz",
-                command,
-                profile,
-              },
-              "ARM64 macOS": {
-                release_for: "ARM64 macOS",
-                os: "macOS-latest",
-                target: "aarch64-apple-darwin",
-                bin: "replex",
-                name: "aarch64-apple-darwin.tar.gz",
-                command,
-                profile,
-              },
-              "x86_64 Windows": {
-                release_for: "x86_64 Windows",
-                os: "windows-latest",
-                target: "x86_64-pc-windows-msvc",
-                bin: "replex.exe",
-                name: "precious-Windows-x86_64.zip",
-                command,
-                profile,
-              },
-            }
+          platform: ${{ inputs.platform }}
+          release: ${{ inputs.release }}
 
-            const dockerPlatforms = platforms
-              .map(platform => platformMap[platform]?.docker)
-              .filter(platform => platform)
-            
-            const matrix = platforms
-              .map(platform => platformMap[platform])
-              .filter(platform => platform)
-            
-            core.setOutput("docker", dockerPlatforms.join(","))
-            core.setOutput("matrix", JSON.stringify({ platform: matrix }))
+      - name: Set Docker platform
+        id: set-docker
+        uses: ./.github/actions/set-docker
+        with:
+          platform: ${{ inputs.platform }}
 
   build:
     name: ${{ matrix.platform.release_for }}
     needs: setup
     runs-on: ${{ matrix.platform.os }}
-    outputs:
-      platforms: ${{ steps.collect-platforms.outputs.platforms }}
     
     strategy:
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
@@ -134,7 +75,3 @@ jobs:
         with:
           name: ${{ matrix.platform.target }}
           path: bin/${{ matrix.platform.target }}
-
-      - name: Collect docker platforms
-        id: collect-platforms
-        run: echo "platforms=${{ matrix.platform.docker }}" >> $GITHUB_OUTPUT

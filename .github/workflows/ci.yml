@@ -4,8 +4,9 @@ on:
   push:
     branches:
       - main
-  release:
-    types: [published]
+      - chore/better-workflows
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       platform:
@@ -36,27 +37,25 @@ jobs:
         with:
           result-encoding: string
           script: |
-            let platform = "";
-            switch ("${{ github.event_name }}") {
-              case "push":
-                platform = "linux"
-                break
-              case 'release':
-                platform = "all"
-                break
-              case 'workflow_dispatch':
-                platform = "${{ github.event.inputs.platform }}"
-                break
-            }
-
+            const ref = "${{ github.ref }}";
+            const eventName = "${{ github.event_name }}";
+            
             const platformMap = {
               all: "x86_64 Linux, ARM64 Linux, x86_64 macOS, ARM64 macOS, x86_64 Windows",
               linux: "x86_64 Linux, ARM64 Linux",
               macos: "x86_64 macOS, ARM64 macOS",
               windows: "x86_64 Windows",
             }
+            
+            if (ref.startsWith('refs/tags/v')) {
+              return platformMap['all']
+            }
 
-            return platformMap[platform];
+            if (eventName === 'workflow_dispatch') {
+              return platformMap["${{ github.event.inputs.platform }}"];
+            }
+            
+            return platformMap["linux"];
 
   build-rust:
     name: Build
