@@ -20,7 +20,7 @@ jobs:
       - id: set-matrix
         run: |
           platforms="${{ github.event.inputs.platform }}"
-          matrix=$(echo $platforms | jq -R 'split(",") | map(
+          matrix=$(echo "${platforms}" | jq -R 'split(",") | map(
             if . == "x86_64 Linux" then {
               release_for: "x86_64 Linux",
               os: "ubuntu-22.04",
@@ -59,8 +59,8 @@ jobs:
               bin: "replex.exe",
               name: "precious-Windows-x86_64.zip",
               command: "build"
-            } else empty end)
-          ')
+            } else empty end
+          )')
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
   build:
