@@ -97,44 +97,56 @@ jobs:
             core.setOutput("docker", dockerPlatforms.join(","))
             core.setOutput("matrix", JSON.stringify(matrix))
 
-  build:
-    name: ${{ matrix.platform.release_for }}
+  log:
+    name: Log
+    runs-on: ubuntu-latest
     needs: setup
-    runs-on: ${{ matrix.platform.os }}
-    outputs:
-      platforms: ${{ steps.collect-platforms.outputs.platforms }}
-    
-    strategy:
-      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
-
+    if: needs.setup.outputs.matrix
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - run: echo ${{ needs.setup.outputs.matrix }}
+      - run: echo ${{ needs.setup.outputs.docker }}
+
+
+
+  # build:
+  #   name: ${{ matrix.platform.release_for }}
+  #   needs: setup
+  #   runs-on: ${{ matrix.platform.os }}
+  #   outputs:
+  #     platforms: ${{ steps.collect-platforms.outputs.platforms }}
+    
+  #   strategy:
+  #     matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: dtolnay/rust-toolchain@stable
       
-      - name: Cache cargo & target directories
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: ${{ matrix.platform.target }}
-          shared-key: ${{ runner.os }}-cargox
+  #     - name: Cache cargo & target directories
+  #       uses: Swatinem/rust-cache@v2
+  #       with:
+  #         key: ${{ matrix.platform.target }}
+  #         shared-key: ${{ runner.os }}-cargox
 
-      - name: Build binary
-        uses: houseabsolute/actions-rust-cross@v0
-        with:
-          command: ${{ matrix.platform.command }}
-          target: ${{ matrix.platform.target }}
+  #     - name: Build binary
+  #       uses: houseabsolute/actions-rust-cross@v0
+  #       with:
+  #         command: ${{ matrix.platform.command }}
+  #         target: ${{ matrix.platform.target }}
 
-      - name: Move binaries
-        shell: bash
-        run: |
-          mkdir -p bin/${{ matrix.platform.target }}
-          mv target/${{ matrix.platform.target }}/${{ matrix.platform.profile }}/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
+  #     - name: Move binaries
+  #       shell: bash
+  #       run: |
+  #         mkdir -p bin/${{ matrix.platform.target }}
+  #         mv target/${{ matrix.platform.target }}/${{ matrix.platform.profile }}/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
 
-      - name: Upload binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.platform.target }}
-          path: bin/${{ matrix.platform.target }}
+  #     - name: Upload binaries
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: ${{ matrix.platform.target }}
+  #         path: bin/${{ matrix.platform.target }}
 
-      - name: Collect docker platforms
-        id: collect-platforms
-        run: echo "platforms=${{ matrix.platform.docker }}" >> $GITHUB_OUTPUT
+  #     - name: Collect docker platforms
+  #       id: collect-platforms
+  #       run: echo "platforms=${{ matrix.platform.docker }}" >> $GITHUB_OUTPUT
