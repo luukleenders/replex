@@ -3,6 +3,10 @@ name: Build Rust binaries
 on:
   workflow_call:
     inputs:
+      cache: 
+        description: Whether or not this is a cache run
+        required: false
+        type: boolean
       platform:
         description: Platforms to build for (comma-separated list)
         required: true
@@ -59,11 +63,21 @@ jobs:
               return "${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-debug";
             }
 
-      - name: Wait for cache
+      - name: Wait for cache check
+        if: ${{ !inputs.cache }}
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.ref }}
-          running-workflow-name: 'Build Rust cache'
+          check-name: ${{ matrix.platform.release_for }}
+          repo-token: ${{ secrets.REPLEX_PAT }}
+          wait-interval: 10
+
+      - name: Wait for cache build
+        if: ${{ !inputs.cache }}
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.ref }}
+          check-name: Rust / ${{ matrix.platform.release_for }}
           repo-token: ${{ secrets.REPLEX_PAT }}
           wait-interval: 10
 
