@@ -40,8 +40,8 @@ jobs:
             console.log("event_name:", "${{ github.event_name }}");
 
             let platform = "";
-            switch (${{ github.event_name }}) {
-              case 'push':
+            switch ("${{ github.event_name }}") {
+              case "push":
                 platform = "linux"
                 break
               case 'release':
