@@ -37,8 +37,6 @@ jobs:
         with:
           result-encoding: string
           script: |
-            console.log("event_name:", "${{ github.event_name }}");
-
             let platform = "";
             switch ("${{ github.event_name }}") {
               case "push":
@@ -52,8 +50,6 @@ jobs:
                 break
             }
 
-            console.log("platform:", platform);
-
             const platformMap = {
               all: "x86_64 Linux, ARM64 Linux, x86_64 macOS, ARM64 macOS, x86_64 Windows",
               linux: "x86_64 Linux, ARM64 Linux",
@@ -63,26 +59,19 @@ jobs:
 
             return platformMap[platform];
 
-  log:
-    name: Log platform
-    runs-on: ubuntu-latest
+  build-rust:
+    name: Build
     needs: set-platform
-    steps:
-      - run: echo ${{ needs.set-platform.outputs.platform }}
+    uses: ./.github/workflows/build-rust.yml
+    secrets: inherit
+    with:
+      platform: ${{ needs.set-platform.outputs.platform }}
+      release: ${{ github.event_name == 'release' }}
 
-
-  # build-rust:
-  #   name: Build
-  #   needs: set-platform
-  #   uses: ./.github/workflows/build-rust.yml
-  #   with:
-  #     platform: ${{ needs.set-platform.outputs.platform }}
-  #     release: ${{ github.event_name == 'release' }}
-
-  # build-docker:
-  #   name: Build and push Docker image
-  #   needs: build-rust
-  #   uses: ./.github/workflows/build-docker.yml
-  #   secrets: inherit
-  #   with:
-  #     platform: ${{ needs.build-rust.outputs.docker }}
+  build-docker:
+    name: Build and push Docker image
+    needs: build-rust
+    uses: ./.github/workflows/build-docker.yml
+    secrets: inherit
+    with:
+      platform: ${{ needs.build-rust.outputs.docker }}

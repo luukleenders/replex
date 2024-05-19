@@ -1,9 +1,8 @@
 name: Pull Request
 
 on:
-  workflow_dispatch:
-  # pull_request:
-  #   types: [opened, synchronize, reopened, edited]
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
 
 env: 
   PLATFORMS:
@@ -13,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
 jobs:
@@ -34,12 +33,3 @@ jobs:
       - uses: actions/labeler@v5
         with:
           repo-token: ${{ secrets.REPLEX_PAT }}
-
-  build:
-    name: Build
-    needs: [validate, label]
-    if: github.head_ref != 'chore/update-version'
-    uses: ./.github/workflows/build-rust.yml
-    secrets: inherit
-    with:
-      platform: "x86_64 Linux, ARM64 Linux"
