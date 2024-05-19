@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - chore/better-workflows
   release:
     types: [published]
   workflow_dispatch:
