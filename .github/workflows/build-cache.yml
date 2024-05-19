@@ -1,11 +1,16 @@
 name: Build Rust cache
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - 'v*'
+  workflow_call:
+    inputs:
+      platform:
+        description: Platforms to build for (comma-separated list)
+        required: true
+        type: string
+      release:
+        description: Whether to build for release or not
+        required: false
+        type: boolean
 
 permissions:
   contents: read
@@ -24,7 +29,7 @@ jobs:
         uses: ./.github/actions/map-matrix
         with:
           platform: "x86_64 Linux, ARM64 Linux, x86_64 macOS, ARM64 macOS, x86_64 Windows"
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+          release: ${{ inputs.release }}
 
   cache:
     name: ${{ matrix.platform.release_for }}
@@ -44,7 +49,7 @@ jobs:
         with:
           result-encoding: string
           script: |
-            if (${{ startsWith(github.ref, 'refs/tags/v') }} ) {
+            if (${{ inputs.release }} ) {
               return "${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-release";
             } else {
               return "${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-debug";
@@ -74,3 +79,4 @@ jobs:
     secrets: inherit
     with:
       platform: "x86_64 Linux, ARM64 Linux, x86_64 macOS, ARM64 macOS, x86_64 Windows"
+      cache: true

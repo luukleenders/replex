@@ -55,6 +55,15 @@ jobs:
             
             return platformMap["linux"];
 
+  build-cache:
+    name: Cache
+    needs: set-platform
+    uses: ./.github/workflows/build-cache.yml
+    secrets: inherit
+    with:
+      platform: ${{ needs.set-platform.outputs.platform }}
+      release: ${{ github.event_name == 'release' }}
+
   build-rust:
     name: Rust
     needs: set-platform

@@ -82,6 +82,7 @@ jobs:
           wait-interval: 10
 
       - name: Get cached dependencies
+        if: ${{ !inputs.cache }}
         uses: actions/cache/restore@v4
         with:
           path: |
