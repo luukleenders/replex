@@ -38,17 +38,13 @@ jobs:
       matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
-      - name: Get cache
-        uses: actions/cache/restore@v4
+      - run: rustup toolchain install stable --profile minimal  
+      - uses: Swatinem/rust-cache@v2
+        id: cache
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: cargo-${{ matrix.platform.profile }}-${{ matrix.platform.release_for }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: cargo-${{ matrix.platform.profile }}-${{ matrix.platform.release_for }}-
+          prefix-key: cargo-${{ matrix.platform.profile }}-${{ matrix.platform.os }}-
+          shared-key: ${{ hashFiles('**/Cargo.lock') }}
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Build binaries
         uses: houseabsolute/actions-rust-cross@v0
