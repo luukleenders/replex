@@ -47,8 +47,8 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: cargo-acc-${{ matrix.platform.os }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: cargo-acc-${{ matrix.platform.os }}-
+          key: cargo-${{ matrix.platform.profile }}-${{ matrix.platform.release_for }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-${{ matrix.platform.profile }}-${{ matrix.platform.release_for }}-
 
       - name: Build binaries
         uses: houseabsolute/actions-rust-cross@v0
