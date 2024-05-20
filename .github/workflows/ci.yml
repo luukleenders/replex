@@ -33,7 +33,7 @@ jobs:
           ref: ${{ github.ref }}
           repo-token: ${{ secrets.REPLEX_PAT }}
           wait-interval: 10
-          check-regexp: '^Cache:\s*(.+)$'
+          running-workflow-name: CI Workflow
 
       - name: Set platform
         id: set-platform

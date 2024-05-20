@@ -37,7 +37,7 @@ jobs:
       result: ${{ steps.set-matrix.outputs.matrix }}
 
   cache:
-    name: "Cache: ${{ matrix.platform.release_for }}"
+    name: ${{ matrix.platform.release_for }}
     needs: matrix
     runs-on: ${{ matrix.platform.os }}
     strategy:
