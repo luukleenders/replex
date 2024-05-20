@@ -36,18 +36,28 @@ jobs:
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - id: platform
+      - id: setup
         shell: bash
         run: |
-          if [[ "${{ inputs.release }}" == "true" ]]; then
-            echo "result=linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64" >> $GITHUB_OUTPUT
-          elif [[ "${{ inputs.platform }}" ]]; then
-            echo "result=${{ inputs.platform }}" >> $GITHUB_OUTPUT
+          if [ ${{ inputs.release }} == 'true' ]; then
+            echo "platform=linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64" >> $GITHUB_OUTPUT
+          elif [ ${{github.event_name }} == 'workflow_dispatch' ]; then
+            echo "platform=${{ inputs.platform }}" >> $GITHUB_OUTPUT
           else
-            echo "result=linux/amd64, linux/arm64" >> $GITHUB_OUTPUT
+            echo "platform=linux/amd64, linux/arm64" >> $GITHUB_OUTPUT
           fi
+    
+          if [ ${{ inputs.release }} == 'true' ]; then
+            echo "release=true" >> $GITHUB_OUTPUT
+          elif [ ${{ github.ref }} == 'refs/heads/main' ]]; then
+            echo "release=true" >> $GITHUB_OUTPUT
+          else
+            echo "release=false" >> $GITHUB_OUTPUT
+          fi
+    
     outputs:
-      platform: ${{ steps.platform.outputs.result }}
+      platform: ${{ steps.setup.outputs.platform }}
+      release: ${{ steps.setup.outputs.release }}
      
   build:
     name: Build
@@ -56,7 +66,7 @@ jobs:
     secrets: inherit
     with:
       platform: ${{ needs.setup.outputs.platform }}
-      release: ${{ inputs.release == 'true' }}
+      release: ${{ needs.setup.outputs.release == 'true' }}
 
   docker:
     if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
