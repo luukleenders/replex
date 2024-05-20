@@ -39,21 +39,22 @@ jobs:
       - id: setup
         shell: bash
         run: |
-          if [[ "${{ inputs.release }}" == "true" ]]; then"
-            echo "platform=linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64" >> $GITHUB_OUTPUT
-          elif [[ "${{ inputs.platform }}" ]]; then
-            echo "platform=${{ inputs.platform }}" >> $GITHUB_OUTPUT
-          else
-            echo "platform=linux/amd64, linux/arm64" >> $GITHUB_OUTPUT
-          fi
-
           if [[ "${{ inputs.release }}" == "true" ]]; then
-            echo "release=true" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref }}" == "refs/heads/main" ]] then
-            echo "release=true" >> $GITHUB_OUTPUT
+            echo "platform=linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64" >> $GITHUB_ENV
+          elif [[ -n "${{ inputs.platform }}" ]]; then
+            echo "platform=${{ inputs.platform }}" >> $GITHUB_ENV
           else
-            echo "release=false" >> $GITHUB_OUTPUT
+            echo "platform=linux/amd64, linux/arm64" >> $GITHUB_ENV
           fi
+    
+          if [[ "${{ inputs.release }}" == "true" ]]; then
+            echo "release=true" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "release=true" >> $GITHUB_ENV
+          else
+            echo "release=false" >> $GITHUB_ENV
+          fi
+    
     outputs:
       platform: ${{ steps.setup.outputs.platform }}
       release: ${{ steps.setup.outputs.release }}
