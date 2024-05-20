@@ -25,14 +25,20 @@ jobs:
       github.event_name == 'push' ||
       github.event.name == 'workflow_call' ||
       github.event_name == 'workflow_dispatch'
-    uses: ./.github/workflows/build-rust.yml
-    secrets: inherit
-    with:
-      platform: |
-        inputs.release == 'true' && 
-        'linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64' || 
-        'linux/amd64, linux/arm64'
-      release: ${{ inputs.release == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - id: platform
+        run: |
+          if [ ${{ inputs.release == 'true' }} ]; then
+            echo "result=linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64" >> $GITHUB_OUTPUT
+          else
+            echo "result=linux/amd64, linux/arm64" >> $GITHUB_OUTPUT
+          fi
+     
+      - uses: ./.github/workflows/build-rust.yml
+        with:
+          platform: ${{ steps.platform.outputs.result }}
+          release: ${{ inputs.release == 'true' }}
 
   docker:
     if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
