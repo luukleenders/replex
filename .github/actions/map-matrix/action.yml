@@ -54,7 +54,7 @@ runs:
               build: "windows/amd64",
               os: "ubuntu-latest",
               target: "x86_64-pc-windows-gnu",
-              input: `target/x86_64-pc-windows-gnu/${profile}/replex`,
+              input: `target/x86_64-pc-windows-gnu/${profile}/replex.exe`,
               output: "bin/x86_64-pc-windows-gnu/replex.exe",
             },
           }
