@@ -31,7 +31,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
 
   build:
-    name: ${{ matrix.platform.release_for }}
+    name: "Build: ${{ matrix.platform.release_for }}"
     needs: matrix
     runs-on: ${{ matrix.platform.os }}
     strategy:
@@ -47,8 +47,8 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: cargo-acc-${{ matrix.os }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: cargo-acc-${{ matrix.os }}-
+          key: cargo-acc-${{ matrix.platform.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-acc-${{ matrix.platform.os }}-
 
       - name: Build binaries
         uses: houseabsolute/actions-rust-cross@v0
