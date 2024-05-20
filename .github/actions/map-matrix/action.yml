@@ -19,7 +19,7 @@ runs:
         result-encoding: 'string'
         script: |
           const platforms = "${{ inputs.platform }}".split(",").map(platform => platform.trim())
-          const profile = "${{ inputs.release == 'true' && 'release' || 'debug' }"
+          const profile = "${{ inputs.release == 'true' && 'release' || 'debug' }}"
 
           const platformMap = {
             "linux/amd64": {
