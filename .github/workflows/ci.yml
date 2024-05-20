@@ -2,7 +2,6 @@ name: Continuous Integration
 
 on:
   push:
-  pull_request:
   workflow_call:
     inputs:
       platform:
@@ -28,7 +27,6 @@ concurrency:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   setup:
@@ -36,8 +34,7 @@ jobs:
       github.head_ref != 'chore/update-version' &&
       github.event_name == 'push' ||
       github.event.name == 'workflow_call' ||
-      github.event_name == 'workflow_dispatch' ||
-      github.event.pull_request.head.repo.full_name != github.repository
+      github.event_name == 'workflow_dispatch'
     name: Setup CI
     runs-on: ubuntu-latest
     steps:
