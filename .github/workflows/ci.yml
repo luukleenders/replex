@@ -2,13 +2,18 @@ name: Continuous Integration
 
 on:
   push:
-  workflow_dispatch:
   workflow_call:
     inputs:
       release:
         description: Whether to build a release
         required: false
         type: boolean
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platforms to build for (comma-separated list)
+        required: true
+        type: string
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -32,6 +37,8 @@ jobs:
         run: |
           if [[ "${{ inputs.release }}" == "true" ]]; then
             echo "result=linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64" >> $GITHUB_OUTPUT
+          elif [[ "${{ inputs.platform }}" ]]; then
+            echo "result=${{ inputs.platform }}" >> $GITHUB_OUTPUT
           else
             echo "result=linux/amd64, linux/arm64" >> $GITHUB_OUTPUT
           fi
