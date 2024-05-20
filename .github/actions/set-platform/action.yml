@@ -1,0 +1,40 @@
+name: 'Set Build Platform'
+description: 'Decides which platforms to build for.'
+inputs:
+  platform:
+    description: 'Comma-separated list of platforms to build for.'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set platform
+      id: set-platform
+      uses: actions/github-script@v7
+      with:
+        result-encoding: 'string'
+        script: |
+          const eventName = "${{ github.event_name }}";
+          const ref = "${{ github.ref }}";
+          const userInput = "${{ github.event.inputs.platform }}";
+          
+          const platformMap = {
+            all: "x86_64 Linux, ARM64 Linux, x86_64 macOS, ARM64 macOS, x86_64 Windows",
+            linux: "x86_64 Linux, ARM64 Linux",
+            macos: "x86_64 macOS, ARM64 macOS",
+            windows: "x86_64 Windows",
+          };
+          
+          if (ref.startsWith('refs/tags/v')) {
+            return platformMap['all'];
+          }
+
+          if (userInput && eventName === 'workflow_dispatch') {
+            return platformMap[userInput];
+          }
+          
+          return platformMap['linux'];
+outputs:
+  result:
+    description: 'Comma-separated list of platforms to build for.'
+    value: ${{ steps.set-platform.outputs.result }}

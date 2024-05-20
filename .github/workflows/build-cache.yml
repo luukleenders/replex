@@ -1,61 +1,50 @@
 name: Build Rust cache
 
 on:
-  workflow_call:
-    inputs:
-      platform:
-        description: Platforms to build for (comma-separated list)
-        required: true
-        type: string
-      release:
-        description: Whether to build for release or not
-        required: false
-        type: boolean
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
 
 jobs:
-  setup:
+  platform:
+    name: Set platform
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set platform
+        id: set-platform
+        uses: ./.github/actions/set-platform
+        with:
+          platform: 'linux'
+    outputs:
+      result: ${{ steps.set-platform.outputs.result }}
+
+  matrix:
     name: Set Matrix
     runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-
+    needs: platform
     steps:
       - uses: actions/checkout@v4
       - name: Set matrix
         id: set-matrix
         uses: ./.github/actions/map-matrix
         with:
-          platform: "x86_64 Linux, ARM64 Linux, x86_64 macOS, ARM64 macOS, x86_64 Windows"
-          release: ${{ inputs.release }}
+          platform: ${{ needs.platform.outputs.result }}
+    outputs:
+      result: ${{ steps.set-matrix.outputs.matrix }}
 
   cache:
     name: ${{ matrix.platform.release_for }}
-    needs: setup
+    needs: matrix
     runs-on: ${{ matrix.platform.os }}
-    
     strategy:
-      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
-
+      matrix: ${{ fromJson(needs.matrix.outputs.result) }}
     steps:
       - uses: actions/checkout@v4
-      - name: Generate cache key
-        id: cache-key
-        uses: actions/github-script@v7
-        env:
-          GITHUB_OUTPUT: ${{ secrets.REPLEX_PAT }}
-        with:
-          result-encoding: string
-          script: |
-            if (${{ inputs.release }} ) {
-              return "${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-release";
-            } else {
-              return "${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-debug";
-            }
-
-      - name: Cache dependencies
+      - name: Cache Cargo
         uses: actions/cache@v4
         id: cache
         with:
@@ -65,18 +54,12 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ steps.cache-key.outputs.result }}
-          restore-keys: ${{ runner.os }}-cargo-
-
-    outputs:
-      cache-hit: ${{ steps.cache.outputs.cache-hit }}
-
-  rust:
-    name: Rust
-    needs: cache
-    if: needs.cache.outputs.cache-hit != 'true'
-    uses: ./.github/workflows/build-rust.yml
-    secrets: inherit
-    with:
-      platform: "x86_64 Linux, ARM64 Linux, x86_64 macOS, ARM64 macOS, x86_64 Windows"
-      cache: true
+          key: cargo-acc-${{ matrix.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-acc-${{ matrix.os }}-
+            
+      - name: Build binaries
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: ${{ matrix.platform.command }}
+          target: ${{ matrix.platform.target }}
