@@ -33,7 +33,7 @@ jobs:
           ref: ${{ github.ref }}
           repo-token: ${{ secrets.REPLEX_PAT }}
           wait-interval: 10
-          running-workflow-name: CI Workflow
+          running-workflow-name: Setup CI
 
       - name: Set platform
         id: set-platform
