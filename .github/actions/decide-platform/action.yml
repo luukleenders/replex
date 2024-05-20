@@ -1,4 +1,4 @@
-name: 'Set Build Platform'
+name: 'Decide build platform'
 description: 'Decides which platforms to build for.'
 inputs:
   platform:
@@ -16,21 +16,25 @@ runs:
         script: |
           const eventName = "${{ github.event_name }}";
           const ref = "${{ github.ref }}";
-          const userInput = "${{ github.event.inputs.platform }}";
+          const input = "${{ github.event.inputs.platform }}";
           
           const platformMap = {
-            all: "x86_64 Linux, ARM64 Linux, x86_64 macOS, ARM64 macOS, x86_64 Windows",
-            linux: "x86_64 Linux, ARM64 Linux",
-            macos: "x86_64 macOS, ARM64 macOS",
-            windows: "x86_64 Windows",
+            all: "linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64",
+            linux: "linux/amd64, linux/arm64",
+            macos: "darwin/amd64, darwin/arm64",
+            windows: "windows/amd64",
           };
           
           if (ref.startsWith('refs/tags/v')) {
             return platformMap['all'];
           }
 
-          if (userInput && eventName === 'workflow_dispatch') {
-            return platformMap[userInput];
+          if (input && eventName === 'workflow_dispatch') {
+            return platformMap[input];
+          }
+
+          if (input && eventName === 'workflow_call') {
+            return platformMap[input];
           }
           
           return platformMap['linux'];
