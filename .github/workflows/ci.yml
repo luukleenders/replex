@@ -12,7 +12,7 @@ on:
     inputs:
       platform:
         description: Platform to build for
-        required: true
+        required: false
         type: string
       release:
         description: Build for release
@@ -39,10 +39,10 @@ jobs:
       - id: setup
         shell: bash
         run: |
-          if [ ${{ inputs.release }} == 'true' ]; then
-            echo "platform=linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64" >> $GITHUB_OUTPUT
-          elif [ ${{github.event_name }} == 'workflow_dispatch' ]; then
+          if [ ${{github.event_name }} == 'workflow_dispatch' ]; then
             echo "platform=${{ inputs.platform }}" >> $GITHUB_OUTPUT
+          elif [ ${{ inputs.release }} == 'true' ]; then
+            echo "platform=linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64" >> $GITHUB_OUTPUT
           else
             echo "platform=linux/amd64, linux/arm64" >> $GITHUB_OUTPUT
           fi
@@ -57,7 +57,7 @@ jobs:
     secrets: inherit
     with:
       platform: ${{ needs.setup.outputs.platform }}
-      release: ${{ inputs.release == 'true' }}
+      release: ${{ inputs.release == 'true' && 'true' || 'false'}}
 
   docker:
     if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}

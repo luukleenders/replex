@@ -10,7 +10,7 @@ on:
       release:
         description: Whether to build for release or not
         required: false
-        type: boolean
+        type: string
 
 permissions:
   contents: read
