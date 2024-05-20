@@ -33,11 +33,3 @@ jobs:
       - uses: actions/labeler@v5
         with:
           repo-token: ${{ secrets.REPLEX_PAT }}
-
-  build-rust:
-    name: Build
-    needs: [validate, label]
-    uses: ./.github/workflows/build-rust.yml
-    secrets: inherit
-    with:
-      platform: "x86_64 Linux"

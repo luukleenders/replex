@@ -1,16 +1,26 @@
-name: CI Workflow
+name: Continuous Integration
 
 on:
   push:
-    branches:
-      - main
+  pull_request:
+  workflow_call:
+    inputs:
+      platform:
+        description: Platform to build for
+        required: false
+        type: string
+      release:
+        description: Whether to build a release
+        required: false
+        type: boolean
   workflow_dispatch:
     inputs:
       platform:
         description: Platform to build for
         options: ["all", "linux", "macos", "windows"]
         required: true
-        type: choice
+        type: choice  
+  
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -22,26 +32,23 @@ permissions:
 
 jobs:
   setup:
+    if: | 
+      github.head_ref != 'chore/update-version' &&
+      github.event_name == 'push' ||
+      github.event.name == 'workflow_call' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.head.repo.full_name != github.repository
     name: Setup CI
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Wait for cache
-        if: ${{ github.ref == 'refs/heads/main' }}
-        uses: lewagon/wait-on-check-action@v1.3.4
-        with:
-          ref: ${{ github.ref }}
-          repo-token: ${{ secrets.REPLEX_PAT }}
-          wait-interval: 10
-          running-workflow-name: Setup CI
-
-      - name: Set platform
-        id: set-platform
-        uses: ./.github/actions/set-platform
+      - name: Decide platform
+        id: platform
+        uses: ./.github/actions/decide-platform
         with:
           platform: ${{ inputs.platform }}
     outputs:    
-      platform: ${{ steps.set-platform.outputs.result }}
+      platform: ${{ steps.platform.outputs.result }}
     
   rust:
     name: Rust
@@ -50,9 +57,10 @@ jobs:
     secrets: inherit
     with:
       platform: ${{ needs.setup.outputs.platform }}
-      release: ${{ github.event_name == 'release' }}
+      release: ${{ inputs.release == 'true' }}
 
   docker:
+    if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
     name: Docker
     needs: [setup, rust]
     uses: ./.github/workflows/build-docker.yml

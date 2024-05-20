@@ -14,7 +14,7 @@ on:
 
 permissions:
   contents: read
-
+  
 jobs:
   matrix:
     name: Set Matrix
@@ -28,35 +28,36 @@ jobs:
           platform: ${{ inputs.platform }}
           release: ${{ inputs.release }}
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      result: ${{ steps.set-matrix.outputs.result }}
 
   build:
-    name: ${{ matrix.platform.release_for }}
+    name: ${{ matrix.build }}
     needs: matrix
-    runs-on: ${{ matrix.platform.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
-      matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
+      matrix: 
+        include: ${{ fromJson(needs.matrix.outputs.result) }}
     steps:
       - uses: actions/checkout@v4
       - run: rustup toolchain install stable --profile minimal  
       - uses: Swatinem/rust-cache@v2
         id: cache
         with:
-          prefix-key: cargo-${{ matrix.platform.profile }}-${{ matrix.platform.release_for }}-
+          prefix-key: cargo-${{ matrix.build }}-
           shared-key: ${{ hashFiles('**/Cargo.lock') }}
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Build binaries
         uses: houseabsolute/actions-rust-cross@v0
         with:
-          command: ${{ matrix.platform.command }}
-          target: ${{ matrix.platform.target }}
+          args: ${{ inputs.release == 'true' && '--locked --release' || ''}}
+          target: ${{ matrix.target }}
 
       - name: Move binaries
         shell: bash
         run: |
-          mkdir -p bin/${{ matrix.platform.target }}
-          mv target/${{ matrix.platform.target }}/${{ matrix.platform.profile }}/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
+          mkdir -p bin/${{ matrix.target }}
+          mv ${{ matrix.input }} ${{ matrix.output }}
 
       - name: Upload binaries
         uses: actions/upload-artifact@v4
