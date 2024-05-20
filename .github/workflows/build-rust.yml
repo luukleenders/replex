@@ -11,21 +11,14 @@ on:
         description: Whether to build for release or not
         required: false
         type: boolean
-      upload:
-        description: Whether to upload the binaries or not
-        required: false
-        type: boolean
 
 permissions:
   contents: read
 
 jobs:
-  setup:
+  matrix:
     name: Set Matrix
     runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-
     steps:
       - uses: actions/checkout@v4
       - name: Set matrix
@@ -34,40 +27,18 @@ jobs:
         with:
           platform: ${{ inputs.platform }}
           release: ${{ inputs.release }}
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
 
   build:
     name: ${{ matrix.platform.release_for }}
-    needs: setup
+    needs: matrix
     runs-on: ${{ matrix.platform.os }}
-    
     strategy:
-      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
-
+      matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
-      - name: Generate cache key
-        id: cache-key
-        uses: actions/github-script@v7
-        env:
-          GITHUB_OUTPUT: ${{ secrets.REPLEX_PAT }}
-        with:
-          result-encoding: string
-          script: |
-            if (${{ startsWith(github.ref, 'refs/tags/v') }} ) {
-              return "${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-release";
-            } else {
-              return "${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-debug";
-            }
-
-      - name: Wait for cache
-        uses: lewagon/wait-on-check-action@v1.3.4
-        with:
-          ref: ${{ github.ref }}
-          running-workflow-name: 'Build Rust cache'
-          repo-token: ${{ secrets.REPLEX_PAT }}
-          wait-interval: 10
-
-      - name: Get cached dependencies
+      - name: Get cache
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -76,10 +47,10 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ steps.cache-key.outputs.result }}
-          restore-keys: ${{ runner.os }}-cargo-
+          key: cargo-acc-${{ matrix.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-acc-${{ matrix.os }}-
 
-      - name: Build binary
+      - name: Build binaries
         uses: houseabsolute/actions-rust-cross@v0
         with:
           command: ${{ matrix.platform.command }}
@@ -92,7 +63,6 @@ jobs:
           mv target/${{ matrix.platform.target }}/${{ matrix.platform.profile }}/replex bin/${{ matrix.platform.target }}/${{ matrix.platform.bin }}
 
       - name: Upload binaries
-        if: ${{ inputs.upload }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.target }}
