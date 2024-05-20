@@ -15,7 +15,7 @@ on:
         required: true
         type: string
       release:
-        description: Whether to build a release
+        description: Build for release
         required: false
         type: boolean
 
