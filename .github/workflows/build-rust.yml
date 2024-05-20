@@ -17,18 +17,18 @@ permissions:
   
 jobs:
   matrix:
-    name: Set Matrix
+    name: Matrix
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set matrix
-        id: set-matrix
+      - name: Map matrix
+        id: matrix
         uses: ./.github/actions/map-matrix
         with:
           platform: ${{ inputs.platform }}
           release: ${{ inputs.release }}
     outputs:
-      result: ${{ steps.set-matrix.outputs.result }}
+      result: ${{ steps.matrix.outputs.result }}
 
   build:
     name: ${{ matrix.build }}

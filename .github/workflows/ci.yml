@@ -17,7 +17,8 @@ on:
       release:
         description: Build for release
         required: false
-        type: boolean
+        options: ['true', 'false']
+        type: choice
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
