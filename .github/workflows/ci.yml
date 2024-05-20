@@ -51,7 +51,7 @@ jobs:
       platform: ${{ steps.platform.outputs.result }}
     
   rust:
-    name: Rust
+    name: Build
     needs: setup
     uses: ./.github/workflows/build-rust.yml
     secrets: inherit
