@@ -32,25 +32,31 @@ permissions:
 
 jobs:
   setup:
-    if: | 
-      github.head_ref != 'chore/update-version' &&
-      github.event_name == 'push' ||
-      github.event.name == 'workflow_call' ||
-      github.event_name == 'workflow_dispatch' ||
-      github.event.pull_request.head.repo.full_name != github.repository
     name: Setup CI
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check
+        id: check
+        run: |
+          echo "should-run=github.head_ref != 'chore/update-version' &&
+          github.event_name == 'push' ||
+          github.event.name == 'workflow_call' ||
+          github.event_name == 'workflow_dispatch' ||
+          github.event.pull_request.head.repo.full_name != github.repository" >> $GITHUB_OUTPUT
+
       - name: Decide platform
+        if: steps.check.outputs.should-run == 'true'
         id: platform
         uses: ./.github/actions/decide-platform
         with:
           platform: ${{ inputs.platform }}
-    outputs:    
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
       platform: ${{ steps.platform.outputs.result }}
     
   rust:
+    if: ${{ needs.setup.outputs.should-run == 'true' }}
     name: Build
     needs: setup
     uses: ./.github/workflows/build-rust.yml
