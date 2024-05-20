@@ -41,7 +41,7 @@ jobs:
         run: |
           if [[ "${{ inputs.release }}" == "true" ]]; then
             echo "platform=linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64" >> $GITHUB_ENV
-          elif [[ -n "${{ inputs.platform }}" ]]; then
+          elif [[ "${{ github.event_name }} == "workflow_dispatch" ]]; then
             echo "platform=${{ inputs.platform }}" >> $GITHUB_ENV
           else
             echo "platform=linux/amd64, linux/arm64" >> $GITHUB_ENV
