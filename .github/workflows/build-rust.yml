@@ -42,7 +42,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         id: cache
         with:
-          prefix-key: cargo-${{ matrix.platform.profile }}-${{ matrix.platform.os }}-
+          prefix-key: cargo-${{ matrix.platform.profile }}-${{ matrix.platform.release_for }}-
           shared-key: ${{ hashFiles('**/Cargo.lock') }}
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
