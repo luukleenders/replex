@@ -5,13 +5,13 @@ on:
   workflow_call:
     inputs:
       release:
-        description: Whether to build a release
+        description: Build for release
         required: false
         type: boolean
   workflow_dispatch:
     inputs:
       platform:
-        description: Platforms to build for (comma-separated list)
+        description: Platform to build for
         required: true
         type: string
       release:
