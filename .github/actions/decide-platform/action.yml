@@ -29,11 +29,11 @@ runs:
             return platformMap['all'];
           }
 
-          if (userInput && eventName === 'workflow_dispatch') {
+          if (input && eventName === 'workflow_dispatch') {
             return platformMap[input];
           }
 
-          if (userInput && eventName === 'workflow_call') {
+          if (input && eventName === 'workflow_call') {
             return platformMap[input];
           }
           
