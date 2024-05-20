@@ -18,8 +18,8 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build
+  setup:
+    name: Setup CI
     if: | 
       github.head_ref != 'chore/update-version' &&
       github.event_name == 'push' ||
@@ -27,7 +27,6 @@ jobs:
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - id: platform
         run: |
           if [ ${{ inputs.release == 'true' }} ]; then
@@ -35,11 +34,17 @@ jobs:
           else
             echo "result=linux/amd64, linux/arm64" >> $GITHUB_OUTPUT
           fi
+    outputs:
+      platform: ${{ steps.platform.outputs.result }}
      
-      - uses: ./.github/workflows/build-rust.yml
-        with:
-          platform: ${{ steps.platform.outputs.result }}
-          release: ${{ inputs.release == 'true' }}
+  build:
+    name: Build
+    needs: setup
+    uses: ./.github/workflows/build-rust.yml
+    secrets: inherit
+    with:
+      platform: ${{ needs.setup.outputs.platform }}
+      release: ${{ inputs.release == 'true' }}
 
   docker:
     if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
