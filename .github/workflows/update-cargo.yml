@@ -53,6 +53,7 @@ jobs:
 
       - name: Check for changes
         id: check-changes
+        shell: bash
         run: |
           if [ -n "$(git status --porcelain)" ]; then
             echo "is-changed=true" >> $GITHUB_OUTPUT
