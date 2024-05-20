@@ -24,7 +24,6 @@ jobs:
     uses: ./.github/workflows/ci.yml
     secrets: inherit
     with: 
-      platform: 'all'
       release: true
 
   release:

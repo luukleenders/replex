@@ -2,24 +2,13 @@ name: Continuous Integration
 
 on:
   push:
+  workflow_dispatch:
   workflow_call:
     inputs:
-      platform:
-        description: Platform to build for
-        required: false
-        type: string
       release:
         description: Whether to build a release
         required: false
         type: boolean
-  workflow_dispatch:
-    inputs:
-      platform:
-        description: Platform to build for
-        options: ["all", "linux", "macos", "windows"]
-        required: true
-        type: choice  
-  
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -30,24 +19,26 @@ permissions:
 
 jobs:
   setup:
+    name: Setup CI
     if: | 
       github.head_ref != 'chore/update-version' &&
       github.event_name == 'push' ||
       github.event.name == 'workflow_call' ||
       github.event_name == 'workflow_dispatch'
-    name: Setup CI
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Decide platform
-        id: platform
-        uses: ./.github/actions/decide-platform
-        with:
-          platform: ${{ inputs.platform }}
-    outputs:    
+      - id: platform
+        shell: bash
+        run: |
+          if [[ "${{ inputs.release }}" == "true" ]]; then
+            echo "result=linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64" >> $GITHUB_OUTPUT
+          else
+            echo "result=linux/amd64, linux/arm64" >> $GITHUB_OUTPUT
+          fi
+    outputs:
       platform: ${{ steps.platform.outputs.result }}
-    
-  rust:
+     
+  build:
     name: Build
     needs: setup
     uses: ./.github/workflows/build-rust.yml
@@ -59,8 +50,8 @@ jobs:
   docker:
     if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
     name: Docker
-    needs: [setup, rust]
+    needs: build
     uses: ./.github/workflows/build-docker.yml
     secrets: inherit
     with:
-      platform: ${{ needs.setup.outputs.platform }}
+      platform: 'linux/amd64, linux/arm64'
