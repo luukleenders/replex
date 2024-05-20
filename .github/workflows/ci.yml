@@ -49,7 +49,7 @@ jobs:
 
           if [[ "${{ inputs.release }}" == "true" ]]; then
             echo "release=true" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref == 'refs/heads/main' }}"]] then
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]] then
             echo "release=true" >> $GITHUB_OUTPUT
           else
             echo "release=false" >> $GITHUB_OUTPUT
