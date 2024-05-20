@@ -39,17 +39,17 @@ jobs:
       - id: setup
         shell: bash
         run: |
-          if [[ "${{ inputs.release }}" == "true" ]]; then
+          if [ ${{ inputs.release }} == 'true' ]; then
             echo "platform=linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64" >> $GITHUB_ENV
-          elif [[ "${{ github.event_name }} == "workflow_dispatch" ]]; then
+          elif [ ${{github.event_name }} == 'workflow_dispatch' ]; then
             echo "platform=${{ inputs.platform }}" >> $GITHUB_ENV
           else
             echo "platform=linux/amd64, linux/arm64" >> $GITHUB_ENV
           fi
     
-          if [[ "${{ inputs.release }}" == "true" ]]; then
+          if [ ${{ inputs.release }} == 'true' ]; then
             echo "release=true" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          elif [ ${{ github.ref }} == 'refs/heads/main' ]]; then
             echo "release=true" >> $GITHUB_ENV
           else
             echo "release=false" >> $GITHUB_ENV
