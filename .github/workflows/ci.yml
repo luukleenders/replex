@@ -2,20 +2,6 @@ name: Continuous Integration
 
 on:
   push:
-  workflow_call:
-    inputs:
-      release:
-        description: Build for release
-        required: false
-        type: boolean
-      upload_url:
-        description: The URL to upload the binaries to
-        required: false
-        type: string
-      version:
-        description: The version to update to
-        required: false
-        type: string
   workflow_dispatch:
     inputs:
       platform:
@@ -42,8 +28,6 @@ jobs:
         run: |
           if [ ${{github.event_name }} == 'workflow_dispatch' ]; then
             echo "platform=${{ inputs.platform }}" >> $GITHUB_OUTPUT
-          elif [ ${{ inputs.release }} == 'true' ]; then
-            echo "platform=linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64" >> $GITHUB_OUTPUT
           else
             echo "platform=linux/amd64, linux/arm64" >> $GITHUB_OUTPUT
           fi
@@ -57,8 +41,6 @@ jobs:
     secrets: inherit
     with:
       platform: ${{ needs.setup.outputs.platform }}
-      release: ${{ inputs.release == 'true' }}
-      upload_url: ${{ inputs.upload_url }}
 
   docker:
     name: Docker
@@ -68,4 +50,3 @@ jobs:
     secrets: inherit
     with:
       platform: 'linux/amd64, linux/arm64'
-      version: ${{ inputs.version }}
