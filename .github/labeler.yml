@@ -6,3 +6,6 @@ fix:
 
 chore:
   - head-branch: ['^chore', 'chore']
+
+cargo-bump:
+  - head-branch: ['^chore/update-version', 'chore/update-version']

@@ -7,6 +7,9 @@ template: |
 
   $CHANGES
 
+exclude-labels:
+  - cargo-bump
+
 categories:
   - title: '🚀 Features'
     label: feature
