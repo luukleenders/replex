@@ -8,6 +8,10 @@ on:
         description: Build for release
         required: false
         type: boolean
+      upload_url:
+        description: The URL to upload the binaries to
+        required: false
+        type: string
       version:
         description: The version to update to
         required: false
@@ -16,12 +20,8 @@ on:
     inputs:
       platform:
         description: Platform to build for
+        options: ['linux/amd64', 'linux/arm64', 'darwin/amd64', 'darwin/arm64', 'windows/amd64']
         required: true
-        type: string
-      release:
-        description: Build for release
-        required: false
-        options: ['true', 'false']
         type: choice
 
 concurrency:
@@ -57,7 +57,8 @@ jobs:
     secrets: inherit
     with:
       platform: ${{ needs.setup.outputs.platform }}
-      release: ${{ inputs.release == 'true' && 'true' || 'false'}}
+      release: ${{ inputs.release == 'true' }}
+      upload_url: ${{ inputs.upload_url }}
 
   docker:
     name: Docker

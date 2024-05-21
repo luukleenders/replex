@@ -29,15 +29,16 @@ jobs:
         id: clean-tag
         run: echo "version=${${{ steps.release-drafter.outputs.tag_name }}#v}" >> $GITHUB_OUTPUT
     outputs:
-      next-version: ${{ steps.clean-tag.outputs.version }}
-      release-id: ${{ steps.release-drafter.outputs.id }}
+      next_version: ${{ steps.clean-tag.outputs.version }}
+      release_id: ${{ steps.release-drafter.outputs.id }}
+      upload_url: ${{ steps.release-drafter.outputs.upload_url }}
 
   update-cargo:
     needs: prepare
     uses: ./.github/workflows/update-cargo.yml
     secrets: inherit
     with:
-      version: ${{ needs.prepare.outputs.next-version }}
+      version: ${{ needs.prepare.outputs.next_version }}
   
   ci:
     name: CI
@@ -47,7 +48,9 @@ jobs:
     secrets: inherit
     with:
       release: true
-      version: ${{ needs.prepare.outputs.next-version }}
+      upload_url: ${{ needs.prepare.outputs.upload_url }}
+      version: ${{ needs.prepare.outputs.next_version }}
+      
 
   release:
     name: Release
@@ -55,8 +58,13 @@ jobs:
     needs: [prepare, ci]
     steps:
       - uses: actions/checkout@v4
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: ./bin
+
       - uses: eregon/publish-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
         with:
-          release_id: ${{ needs.prepare.outputs.release-id }}
+          release_id: ${{ needs.prepare.outputs.release_id }}

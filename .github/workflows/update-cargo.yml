@@ -54,7 +54,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Cargo.toml
-          path: Cargo.*
+          path: ./Cargo.*
 
   push-changes:
     name: Commit & Push changes
