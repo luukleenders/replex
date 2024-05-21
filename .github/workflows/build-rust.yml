@@ -70,11 +70,11 @@ jobs:
           path: ./bin/${{ matrix.target }}
 
       - name: Archive binaries
-        if: ${{ inputs.release }}
+        if: inputs.release == 'true'
         run: 7z a replex-${{ matrix.target }}.zip ${{ matrix.output }}
 
       - name: Upload release assets
-        if: ${{ inputs.release }}
+        if: inputs.release == 'true'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
