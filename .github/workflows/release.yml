@@ -15,31 +15,56 @@ permissions:
   pull-requests: write
 
 jobs:
-  update-cargo:
-    uses: ./.github/workflows/update-cargo.yml
-    secrets: inherit
-
-  ci:
-    needs: update-cargo
-    uses: ./.github/workflows/ci.yml
-    secrets: inherit
-    with: 
-      release: true
-
-  release:
-    name: Release
+  prepare:
+    name: Prepare Release
     runs-on: ubuntu-latest
-    needs: ci
     steps:
       - uses: actions/checkout@v4
-
       - uses: release-drafter/release-drafter@v6
         id: release-drafter
         env: 
           GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
 
+      - name: Clean tag name
+        id: clean-tag
+        run: echo "version=${${{ steps.release-drafter.outputs.tag_name }}#v}" >> $GITHUB_OUTPUT
+    outputs:
+      next_version: ${{ steps.clean-tag.outputs.version }}
+      release_id: ${{ steps.release-drafter.outputs.id }}
+      upload_url: ${{ steps.release-drafter.outputs.upload_url }}
+
+  update-cargo:
+    needs: prepare
+    uses: ./.github/workflows/update-cargo.yml
+    secrets: inherit
+    with:
+      version: ${{ needs.prepare.outputs.next_version }}
+  
+  ci:
+    name: CI
+    needs: [prepare, update-cargo]
+    if: ${{ needs.update-cargo.outputs.is-successful == 'true' }}
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+    with:
+      release: true
+      upload_url: ${{ needs.prepare.outputs.upload_url }}
+      version: ${{ needs.prepare.outputs.next_version }}
+      
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [prepare, ci]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: ./bin
+
       - uses: eregon/publish-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.REPLEX_PAT }}
         with:
-          release_id: ${{ steps.release-drafter.outputs.id }}
+          release_id: ${{ needs.prepare.outputs.release_id }}

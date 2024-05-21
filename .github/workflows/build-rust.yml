@@ -11,6 +11,10 @@ on:
         description: Whether to build for release or not
         required: false
         type: string
+      upload_url:
+        description: The URL to upload the binaries to
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -56,11 +60,26 @@ jobs:
       - name: Move binaries
         shell: bash
         run: |
-          mkdir -p bin/${{ matrix.target }}
+          mkdir -p ./bin/${{ matrix.target }}
           mv ${{ matrix.input }} ${{ matrix.output }}
 
       - name: Upload binaries
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
-          path: bin/${{ matrix.target }}
+          path: ./bin/${{ matrix.target }}
+
+      - name: Archive binaries
+        if: inputs.release == 'true'
+        run: 7z a replex-${{ matrix.target }}.zip ${{ matrix.output }}
+
+      - name: Upload release assets
+        if: inputs.release == 'true'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ inputs.upload_url }}
+          asset_path: ./bin/replex-${{ matrix.target }}.zip
+          asset_name: replex-${{ matrix.target }}.zip
+          asset_content_type: application/zip
