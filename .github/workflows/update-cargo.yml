@@ -11,18 +11,13 @@ on:
         description: The version to update to
         required: true
         type: string
-    outputs:
-      is_successful:
-        value: |
-          ${{ jobs.push-changes.outputs.is-merged }} == 'true' ||
-          ${{ jobs.update-cargo.outputs.is-changed }} != 'true'
 
 jobs:
   update-cargo:
     name: Update Cargo.toml version
     runs-on: ubuntu-latest
     outputs:
-      is-changed: ${{ steps.check-changes.outputs.is-changed }}
+      is_changed: ${{ steps.check-changes.outputs.is_changed }}
 
     steps:
       - name: Checkout repository
@@ -43,9 +38,9 @@ jobs:
         shell: bash
         run: |
           if [ -n "$(git status --porcelain)" ]; then
-            echo "is-changed=true" >> $GITHUB_OUTPUT
+            echo "is_changed=true" >> $GITHUB_OUTPUT
           else
-            echo "is-changed=false" >> $GITHUB_OUTPUT
+            echo "is_changed=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Upload Cargo.toml
@@ -56,11 +51,11 @@ jobs:
 
   push-changes:
     name: Commit & Push changes
-    if: needs.update-cargo.outputs.is-changed == 'true'
+    if: needs.update-cargo.outputs.is_changed == 'true'
     needs: update-cargo
     runs-on: ubuntu-latest
     outputs:
-      is-merged: ${{ steps.merge.outputs.result }}
+      is_merged: ${{ steps.merge.outputs.result }}
 
     steps:
       - name: Checkout repository
@@ -117,4 +112,3 @@ jobs:
             });
 
             return merged.data.merged
-    
