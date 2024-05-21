@@ -12,12 +12,10 @@ on:
         required: true
         type: string
     outputs:
-      is-successful:
-        value: >
-          ${{
-            !jobs.update-cargo.outputs.is-changed ||
-            (jobs.update-cargo.outputs.is-changed && jobs.push-changes.outputs.is-merged)
-          }}
+      is_successful:
+        value: |
+          ${{ jobs.push-changes.outputs.is-merged }} == 'true' ||
+          ${{ jobs.update-cargo.outputs.is-changed }} != 'true'
 
 jobs:
   update-cargo:
