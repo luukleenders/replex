@@ -47,7 +47,7 @@ jobs:
   ci:
     name: CI
     needs: [prepare, update-cargo]
-    if: ${{ needs.update-cargo.outputs.is-successful == 'true' }}
+    if: ${{ needs.update-cargo.outputs.is_successful == 'true' }}
     uses: ./.github/workflows/ci.yml
     secrets: inherit
     with:
