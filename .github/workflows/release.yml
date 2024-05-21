@@ -27,7 +27,11 @@ jobs:
 
       - name: Clean tag name
         id: clean-tag
-        run: echo "version=${${{ steps.release-drafter.outputs.tag_name }}#v}" >> $GITHUB_OUTPUT
+        run: |
+          version="${{ steps.release-drafter.outputs.tag_name }}"
+          cleaned="${version#v}"
+          echo "version=$cleaned" >> $GITHUB_OUTPUT
+          
     outputs:
       next_version: ${{ steps.clean-tag.outputs.version }}
       release_id: ${{ steps.release-drafter.outputs.id }}
