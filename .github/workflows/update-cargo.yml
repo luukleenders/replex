@@ -73,14 +73,13 @@ jobs:
         with:
           github_token: ${{ secrets.REPLEX_PAT }}
           branch: chore/update-version
-          message: '[skip ci] Update Cargo.toml version to ${{ inputs.version }}'
+          message: 'Update Cargo.toml version to ${{ inputs.version }}'
 
       - name: Create Pull Request
         id: create-pr
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.REPLEX_PAT }}
-          commit-message: "chore: update Cargo.toml version to ${{ inputs.version }}"
           base: main
           branch: chore/update-version
           title: "chore: update Cargo.toml version to ${{ inputs.version }}"
