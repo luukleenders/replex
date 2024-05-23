@@ -9,11 +9,9 @@ use crate::middlewares::Timeout;
 pub const HUBS_CONTINUE_WATCHING: &str = "/hubs/continueWatching";
 pub const HUBS_PROMOTED: &str = "/hubs/promoted";
 pub const HUBS_SECTIONS: &str = "/hubs/sections/<id>";
-pub const REPLEX_COLLECTION_CHILDREN: &str =
-    "/replex/<style>/library/collections/<ids>/children";
+pub const REPLEX_COLLECTION_CHILDREN: &str = "/replex/<style>/library/collections/<ids>/children";
 pub const REPLEX_DEFAULT: &str = "/replex/<style>/<**rest>";
 pub const LIBRARY_METADATA_RELATED: &str = "/library/metadata/<id>/related";
-
 pub const PHOTO_TRANSCODE: &str = "/photo/<colon:colon>/transcode";
 pub const PING: &str = "/ping";
 pub const REST: &str = "<**rest>";
@@ -24,8 +22,7 @@ pub fn routes() -> Router {
         .then(|mut router| {
             if config.better_on_deck.enabled {
                 router = router.push(
-                    Router::with_path(HUBS_CONTINUE_WATCHING)
-                        .get(empty_media_container_handler),
+                    Router::with_path(HUBS_CONTINUE_WATCHING).get(empty_media_container_handler),
                 );
             }
             router
@@ -38,10 +35,7 @@ pub fn routes() -> Router {
         )
         .push(Router::with_path(HUBS_PROMOTED).get(promoted_hubs_handler))
         .push(Router::with_path(HUBS_SECTIONS).get(section_hubs_handler))
-        .push(
-            Router::with_path(REPLEX_COLLECTION_CHILDREN)
-                .get(collection_children_handler),
-        )
+        .push(Router::with_path(REPLEX_COLLECTION_CHILDREN).get(collection_children_handler))
         .push(Router::with_path(REPLEX_DEFAULT).get(default_handler))
         .push(
             Router::with_path(PING)

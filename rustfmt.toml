@@ -1,5 +1,5 @@
 # Maximum width of each line
-max_width = 85
+max_width = 100
 # Combine imports from the same module into a single 'use' statement
 merge_imports = true
 # Ensure there's a trailing comma in multi-line lists

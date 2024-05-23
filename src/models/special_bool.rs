@@ -11,17 +11,7 @@ use yaserde_derive::YaDeserialize;
 /// A special boolean struct designed for XML serialization, catering to the annoying requirement
 /// of an Android mobile client that expects boolean values to be represented as "0" or "1" instead
 /// of "true" or "false".
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Default,
-    PartialOrd,
-    YaDeserialize,
-    Encode,
-    Decode,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, PartialOrd, YaDeserialize, Encode, Decode)]
 pub struct SpecialBool {
     /// The inner boolean value.
     inner: bool,
@@ -43,10 +33,7 @@ impl Display for SpecialBool {
 
 impl YaSerialize for SpecialBool {
     /// Serializes the boolean as "1" for true and "0" for false for XML content.
-    fn serialize<W: Write>(
-        &self,
-        writer: &mut YaSerializer<W>,
-    ) -> Result<(), String> {
+    fn serialize<W: Write>(&self, writer: &mut YaSerializer<W>) -> Result<(), String> {
         let content = self.to_string();
         let event = XmlEvent::characters(&content);
         writer.write(event).map_err(|e| e.to_string())
@@ -85,8 +72,7 @@ impl<'de> Deserialize<'de> for SpecialBool {
     where
         D: Deserializer<'de>,
     {
-        let inner: bool =
-            serde_aux::prelude::deserialize_bool_from_anything(deserializer)?;
+        let inner: bool = serde_aux::prelude::deserialize_bool_from_anything(deserializer)?;
         Ok(SpecialBool::new(inner))
     }
 }

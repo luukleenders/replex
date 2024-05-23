@@ -44,9 +44,13 @@ jobs:
 
   docker:
     name: Docker
-    if: ${{ github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' }}
-    needs: build
+    if: |
+      github.ref == 'refs/heads/main' || 
+      github.event_name == 'workflow_dispatch' ||
+      needs.setup.outputs.platform == 'linux/amd64' || 
+      needs.setup.outputs.platform == 'linux/arm64'
+    needs: [setup, build]
     uses: ./.github/workflows/build-docker.yml
     secrets: inherit
     with:
-      platform: 'linux/amd64, linux/arm64'
+      platform: ${{ needs.setup.outputs.platform }}

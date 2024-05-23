@@ -3,29 +3,16 @@ use crate::models::*;
 use crate::plex::client::PlexClient;
 use crate::utils::*;
 use anyhow::Result;
-use bincode::{Decode, Encode};
-use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use yaserde_derive::YaDeserialize;
-use yaserde_derive::YaSerialize;
 
-use crate::deserializers::{
-    option_number_from_string, option_string_from_number,
-};
+use crate::deserializers::{option_number_from_string, option_string_from_number};
 use crate::plex::traits::Collection;
 
-#[derive(
-    Debug,
-    Default,
-    Serialize,
-    Deserialize,
-    Clone,
-    YaDeserialize,
-    YaSerialize,
-    Encode,
-    Decode,
-    PartialEq,
-)]
+use replex_common::{struct_derives, struct_imports};
+
+struct_imports!();
+
+#[struct_derives()]
 #[serde(rename_all = "camelCase")]
 #[serde_as]
 pub struct MetaData {
@@ -282,19 +269,11 @@ pub struct MetaData {
     #[yaserde(attribute, rename = "Meta")]
     pub meta: Option<Meta>,
 
-    #[serde(
-        default,
-        rename = "Metadata",
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(default, rename = "Metadata", skip_serializing_if = "Vec::is_empty")]
     #[yaserde(rename = "Metadata")]
     pub metadata: Vec<MetaData>,
 
-    #[serde(
-        default,
-        rename = "Directory",
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(default, rename = "Directory", skip_serializing_if = "Vec::is_empty")]
     #[yaserde(rename = "Directory")]
     pub directory: Vec<MetaData>, // only avaiable in XML
 
@@ -350,11 +329,7 @@ pub struct MetaData {
     #[yaserde(default, child, rename = "Image")]
     pub images: Vec<Image>,
 
-    #[serde(
-        default,
-        rename = "Context",
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(default, rename = "Context", skip_serializing_if = "Option::is_none")]
     #[yaserde(child, rename = "Context")]
     pub context_images: Option<Context>,
 
@@ -370,27 +345,15 @@ pub struct MetaData {
     #[yaserde(attribute, rename = "playQueueItemID")]
     pub play_queue_item_id: Option<i64>,
 
-    #[serde(
-        default,
-        rename = "Collection",
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(default, rename = "Collection", skip_serializing_if = "Vec::is_empty")]
     #[yaserde(default, child, rename = "Collection")]
     pub collections: Vec<Tag>,
 
-    #[serde(
-        default,
-        rename = "Country",
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(default, rename = "Country", skip_serializing_if = "Vec::is_empty")]
     #[yaserde(default, child, rename = "Country")]
     pub countries: Vec<Tag>,
 
-    #[serde(
-        default,
-        rename = "Director",
-        skip_serializing_if = "Vec::is_empty"
-    )]
+    #[serde(default, rename = "Director", skip_serializing_if = "Vec::is_empty")]
     #[yaserde(default, child, rename = "Director")]
     pub directors: Vec<Tag>,
 
@@ -450,8 +413,7 @@ impl MetaData {
         // Further checks for collection hubs, if necessary.
         if self.is_collection_hub() {
             let collection_id = get_collection_id_from_hub(self);
-            let collection =
-                Collection::get(plex_client, collection_id).await?;
+            let collection = Collection::get(plex_client, collection_id).await?;
 
             // Check if the first child of the collection details has the "REPLEXHERO" label.
             if let Some(collection) = collection.metadata.first() {
@@ -463,29 +425,21 @@ impl MetaData {
     }
 
     pub fn is_watched(&self) -> bool {
-        if self.view_count.is_some() && self.view_count.unwrap_or_default() > 0
-        {
+        if self.view_count.is_some() && self.view_count.unwrap_or_default() > 0 {
             return true;
         }
-        if self.viewed_leaf_count.is_some()
-            && self.viewed_leaf_count.unwrap_or_default() > 0
-        {
+        if self.viewed_leaf_count.is_some() && self.viewed_leaf_count.unwrap_or_default() > 0 {
             return true;
         }
         false
     }
 
-    pub async fn exclude_watched(
-        &self,
-        plex_client: &PlexClient,
-    ) -> Result<bool> {
+    pub async fn exclude_watched(&self, plex_client: &PlexClient) -> Result<bool> {
         if !self.is_collection_hub() {
             return Ok(false);
         }
 
-        let collection =
-            Collection::get(plex_client, get_collection_id_from_hub(self))
-                .await?;
+        let collection = Collection::get(plex_client, get_collection_id_from_hub(self)).await?;
 
         // config.exclude_watched
         // ||

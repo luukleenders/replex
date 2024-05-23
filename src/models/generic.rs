@@ -1,16 +1,16 @@
 use anyhow::Result;
 use async_trait::async_trait;
-use bincode::{Decode, Encode};
+use replex_common::{struct_derives, struct_imports};
 use salvo::macros::Extractible;
-use serde::{Deserialize, Serialize};
 use serde_aux::prelude::deserialize_number_from_string;
-use yaserde_derive::{YaDeserialize, YaSerialize};
 
 use crate::plex::models::PlexContext;
 
 use super::{DeviceType, MediaContainer, Platform};
 
-#[derive(Debug, Clone, Default, Deserialize, Serialize, Encode, Decode)]
+struct_imports!();
+
+#[struct_derives]
 pub struct ReplexOptions {
     pub limit: Option<i32>,
     pub platform: Option<String>,
@@ -18,9 +18,8 @@ pub struct ReplexOptions {
     pub include_watched: bool,
 }
 
-#[derive(
-    Serialize, Deserialize, Debug, Extractible, Default, Clone, Encode, Decode,
-)]
+#[struct_derives()]
+#[derive(Extractible)]
 #[salvo(extract(
     default_source(from = "query"),
     default_source(from = "header"),
@@ -41,58 +40,19 @@ pub trait FromResponse<T>: Sized {
     async fn from_response(resp: T) -> Result<Self>;
 }
 
-#[derive(
-    Debug,
-    Serialize,
-    Deserialize,
-    Clone,
-    PartialEq,
-    Eq,
-    YaDeserialize,
-    YaSerialize,
-    Default,
-    PartialOrd,
-    Encode,
-    Decode,
-)]
+#[struct_derives()]
 pub struct Guid {
     #[yaserde(attribute)]
     id: String,
 }
 
-#[derive(
-    Debug,
-    Serialize,
-    Deserialize,
-    Clone,
-    PartialEq,
-    Eq,
-    YaDeserialize,
-    YaSerialize,
-    Default,
-    PartialOrd,
-    Encode,
-    Decode,
-)]
+#[struct_derives()]
 pub struct Tag {
     #[yaserde(attribute)]
     tag: String,
 }
 
-#[derive(
-    Clone,
-    Debug,
-    Default,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Serialize,
-    Deserialize,
-    YaDeserialize,
-    YaSerialize,
-    Encode,
-    Decode,
-)]
+#[struct_derives()]
 pub struct Image {
     #[serde(default)]
     #[yaserde(attribute)]
@@ -107,20 +67,7 @@ pub struct Image {
     pub url: String,
 }
 
-#[derive(
-    Debug,
-    Serialize,
-    Deserialize,
-    Clone,
-    PartialEq,
-    Eq,
-    YaDeserialize,
-    YaSerialize,
-    Default,
-    PartialOrd,
-    Encode,
-    Decode,
-)]
+#[struct_derives()]
 #[serde(rename_all = "camelCase")]
 pub struct Label {
     #[yaserde(attribute)]
@@ -132,20 +79,7 @@ pub struct Label {
     filter: String,
 }
 
-#[derive(
-    Debug,
-    Serialize,
-    Deserialize,
-    Clone,
-    PartialEq,
-    Eq,
-    YaDeserialize,
-    YaSerialize,
-    Default,
-    PartialOrd,
-    Encode,
-    Decode,
-)]
+#[struct_derives()]
 #[serde(rename_all = "camelCase")]
 pub struct Context {
     #[serde(rename = "Image", default, skip_serializing_if = "Vec::is_empty")]
@@ -153,18 +87,7 @@ pub struct Context {
     pub images: Vec<Image>,
 }
 
-#[derive(
-    Debug,
-    Serialize,
-    Deserialize,
-    Clone,
-    YaDeserialize,
-    YaSerialize,
-    Default,
-    Encode,
-    Decode,
-    PartialEq,
-)]
+#[struct_derives()]
 #[serde(rename_all = "camelCase")]
 pub struct DisplayField {
     #[yaserde(attribute, rename = "type")]
@@ -172,18 +95,7 @@ pub struct DisplayField {
     pub fields: Vec<String>,
 }
 
-#[derive(
-    Debug,
-    Serialize,
-    Deserialize,
-    Clone,
-    YaDeserialize,
-    YaSerialize,
-    Default,
-    Encode,
-    Decode,
-    PartialEq,
-)]
+#[struct_derives()]
 #[serde(rename_all = "camelCase")]
 pub struct MetaType {
     #[yaserde(attribute, rename = "type")]
@@ -196,18 +108,7 @@ pub struct MetaType {
     pub title: Option<String>,
 }
 
-#[derive(
-    Debug,
-    Serialize,
-    Deserialize,
-    Clone,
-    YaDeserialize,
-    YaSerialize,
-    Default,
-    Encode,
-    Decode,
-    PartialEq,
-)]
+#[struct_derives()]
 #[serde(rename_all = "camelCase")]
 pub struct DisplayImage {
     #[yaserde(attribute, rename = "type")]
@@ -218,18 +119,7 @@ pub struct DisplayImage {
     pub image_type: Option<String>,
 }
 
-#[derive(
-    Debug,
-    Serialize,
-    Deserialize,
-    Clone,
-    YaDeserialize,
-    YaSerialize,
-    Default,
-    Encode,
-    Decode,
-    PartialEq,
-)]
+#[struct_derives()]
 #[serde(rename_all = "camelCase")]
 pub struct Meta {
     #[serde(default, rename = "DisplayFields")]
@@ -253,7 +143,7 @@ pub struct ClientHeroStyle {
     pub style: Option<String>,
     pub child_type: Option<String>,
     pub cover_art_as_thumb: bool, // if we should return the coverart in the thumb field
-    pub cover_art_as_art: bool, // if we should return the coverart in the art field
+    pub cover_art_as_art: bool,   // if we should return the coverart in the art field
 }
 
 impl Default for ClientHeroStyle {
@@ -304,20 +194,21 @@ impl ClientHeroStyle {
             Platform::Roku => ClientHeroStyle::roku(),
             Platform::Ios => ClientHeroStyle::ios_style(),
             Platform::TvOS => ClientHeroStyle::tvos_style(),
-            _ => ClientHeroStyle::default(), // _ => {
-                                             //     if product.starts_with("Plex HTPC") {
-                                             //         ClientHeroStyle::htpc_style()
-                                             //     } else {
-                                             //         match product.to_lowercase().as_ref() {
-                                             //             "plex for lg" => ClientHeroStyle::htpc_style(),
-                                             //             "plex for xbox" => ClientHeroStyle::htpc_style(),
-                                             //             "plex for ps4" => ClientHeroStyle::htpc_style(),
-                                             //             "plex for ps5" => ClientHeroStyle::htpc_style(),
-                                             //             "plex for ios" => ClientHeroStyle::ios_style(),
-                                             //             _ => ClientHeroStyle::default(),
-                                             //         }
-                                             //     }
-                                             // }
+            _ => ClientHeroStyle::default(),
+            // _ => {
+            //     if product.starts_with("Plex HTPC") {
+            //         ClientHeroStyle::htpc_style()
+            //     } else {
+            //         match product.to_lowercase().as_ref() {
+            //             "plex for lg" => ClientHeroStyle::htpc_style(),
+            //             "plex for xbox" => ClientHeroStyle::htpc_style(),
+            //             "plex for ps4" => ClientHeroStyle::htpc_style(),
+            //             "plex for ps5" => ClientHeroStyle::htpc_style(),
+            //             "plex for ios" => ClientHeroStyle::ios_style(),
+            //             _ => ClientHeroStyle::default(),
+            //         }
+            //     }
+            // }
         }
     }
 
