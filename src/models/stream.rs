@@ -1,23 +1,9 @@
-use bincode::{Decode, Encode};
-use serde::{Deserialize, Serialize};
+use replex_common::{struct_derives, struct_imports};
 use serde_aux::prelude::deserialize_number_from_string;
-use yaserde_derive::YaDeserialize;
-use yaserde_derive::YaSerialize;
 
-#[derive(
-    Debug,
-    Serialize,
-    Deserialize,
-    Clone,
-    PartialEq,
-    // Eq,
-    YaDeserialize,
-    YaSerialize,
-    Default,
-    PartialOrd,
-    Encode,
-    Decode,
-)]
+struct_imports!();
+
+#[struct_derives()]
 #[serde(rename_all = "camelCase")]
 pub struct Stream {
     #[yaserde(attribute)]
@@ -48,10 +34,7 @@ pub struct Stream {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub language_code: Option<String>,
     #[yaserde(attribute, rename = "DOVIBLCompatID")]
-    #[serde(
-        rename = "DOVIBLCompatID",
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "DOVIBLCompatID", skip_serializing_if = "Option::is_none")]
     pub doviblcompat_id: Option<i64>,
     #[yaserde(attribute, rename = "DOVIBLPresent")]
     #[serde(rename = "DOVIBLPresent", skip_serializing_if = "Option::is_none")]
@@ -69,10 +52,7 @@ pub struct Stream {
     #[serde(rename = "DOVIProfile", skip_serializing_if = "Option::is_none")]
     pub doviprofile: Option<i64>,
     #[yaserde(attribute, rename = "DOVIRPUPresent")]
-    #[serde(
-        rename = "DOVIRPUPresent",
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "DOVIRPUPresent", skip_serializing_if = "Option::is_none")]
     pub dovirpupresent: Option<bool>,
     #[yaserde(attribute, rename = "DOVIVersion")]
     #[serde(rename = "DOVIVersion", skip_serializing_if = "Option::is_none")]

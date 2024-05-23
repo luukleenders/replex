@@ -1,26 +1,13 @@
 use std::fmt;
 
 use crate::models::{SpecialBool, Stream};
-use bincode::{Decode, Encode};
-use serde::{Deserialize, Serialize};
 use serde_aux::prelude::deserialize_number_from_string;
-use yaserde_derive::YaDeserialize;
-use yaserde_derive::YaSerialize;
 
-#[derive(
-    Debug,
-    Serialize,
-    Deserialize,
-    Clone,
-    PartialEq,
-    // Eq,
-    YaDeserialize,
-    YaSerialize,
-    Default,
-    PartialOrd,
-    Encode,
-    Decode,
-)]
+use replex_common::{struct_derives, struct_imports};
+
+struct_imports!();
+
+#[struct_derives()]
 #[serde(rename_all = "camelCase")]
 pub struct Media {
     #[yaserde(attribute)]
@@ -94,20 +81,7 @@ impl fmt::Display for Media {
     }
 }
 
-#[derive(
-    Debug,
-    Serialize,
-    Deserialize,
-    Clone,
-    PartialEq,
-    // Eq,
-    YaDeserialize,
-    YaSerialize,
-    Default,
-    PartialOrd,
-    Encode,
-    Decode,
-)]
+#[struct_derives()]
 #[serde(rename_all = "camelCase")]
 pub struct MediaPart {
     #[yaserde(attribute)]
