@@ -3,5 +3,6 @@
 /target
 /vendor
 
+.idea
 .vscode
 .env

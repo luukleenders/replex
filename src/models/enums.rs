@@ -1,82 +1,55 @@
-use serde::{Deserialize, Serialize};
-use std::clone::Clone;
-use std::cmp::{Eq, PartialEq};
-use std::fmt::Debug;
-use strum_macros::Display as EnumDisplay;
-use strum_macros::{Display, EnumString};
-use yaserde_derive::{YaDeserialize, YaSerialize};
-use bincode::{Decode, Encode};
+use replex_common::{enum_derives, enum_imports};
 
-#[derive(
-    Debug,
-    Default,
-    Clone,
-    PartialEq,
-    Eq,
-    EnumString,
-    EnumDisplay,
-    Serialize,
-    Deserialize,
-    YaSerialize,
-    YaDeserialize,
-    Encode,
-    Decode,
-)]
+enum_imports!();
+
+#[enum_derives]
 pub enum ContentType {
     #[strum(serialize = "application/json", serialize = "text/json")]
     Json,
-    #[strum(
-        serialize = "text/xml;charset=utf-8",
-        serialize = "application/xml"
-    )]
+
     #[default]
+    #[strum(serialize = "text/xml;charset=utf-8", serialize = "application/xml")]
     Xml,
 }
 
-#[derive(
-    Debug,
-    Default,
-    Clone,
-    Display,
-    PartialEq,
-    Eq,
-    EnumString,
-    Serialize,
-    Deserialize,
-    Encode,
-    Decode,
-)]
+#[enum_derives]
 pub enum Platform {
     Android,
-    #[serde(rename = "iOS")]
-    #[strum(serialize = "iOS")]
-    Ios,
-    #[serde(rename = "tvOS")]
-    #[strum(serialize = "tvOS")]
-    TvOS,
     Safari,
     Chrome,
     Roku,
+    Web,
+
+    #[serde(rename = "iOS")]
+    #[strum(serialize = "iOS")]
+    Ios,
+
+    #[serde(rename = "tvOS")]
+    #[strum(serialize = "tvOS")]
+    TvOS,
+
+    #[default]
     #[serde(other)]
     #[strum(serialize = "Generic")]
-    #[default]
     Generic,
 }
 
-#[derive(
-    Debug, Clone, Display, PartialEq, Eq, EnumString, Serialize, Deserialize, Encode, Decode,
-)]
+#[enum_derives]
 pub enum Style {
     #[serde(rename = "hero")]
     Hero,
+
+    #[default]
     #[serde(rename = "shelf")]
     Shelf,
 }
 
-#[derive(Debug)]
+#[enum_derives]
 pub enum DeviceType {
-    Tv,
     Mobile,
+
+    #[default]
+    Tv,
 }
 
 impl DeviceType {

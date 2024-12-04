@@ -4,7 +4,7 @@ use anyhow::Result;
 use futures::future::join_all;
 use mime::Mime;
 use multimap::MultiMap;
-use reqwest_retry::{default_on_request_failure, Retryable, RetryableStrategy};
+// use reqwest_retry::{default_on_request_failure, Retryable, RetryableStrategy};
 use salvo::http::HeaderValue;
 use url::Url;
 use yaserde::ser::to_string as to_xml_str;
@@ -15,41 +15,33 @@ use salvo::Request as SalvoRequest;
 pub type HyperResponse = hyper::Response<ResBody>;
 
 use crate::config::Config;
-use crate::models::{
-    ContentType, DisplayField, DisplayImage, MediaContainer, Meta, MetaData,
-};
+use crate::models::{ContentType, DisplayField, DisplayImage, MediaContainer, Meta, MetaData};
 use crate::plex::client::PlexClient;
 use crate::plex::traits::MetaDataChildren;
 
-struct Retry401;
-impl RetryableStrategy for Retry401 {
-    fn handle(
-        &self,
-        res: &std::result::Result<reqwest::Response, reqwest_middleware::Error>,
-    ) -> Option<Retryable> {
-        match res {
-            Ok(success) if success.status() == 401 => {
-                Some(Retryable::Transient)
-            }
-            Ok(_success) => None,
-            // otherwise do not retry a successful request
-            Err(error) => default_on_request_failure(error),
-        }
-    }
-}
+// struct Retry401;
+// impl RetryableStrategy for Retry401 {
+//     fn handle(
+//         &self,
+//         res: &std::result::Result<reqwest::Response, reqwest_middleware::Error>,
+//     ) -> Option<Retryable> {
+//         match res {
+//             Ok(success) if success.status() == 401 => Some(Retryable::Transient),
+//             Ok(_success) => None,
+//             // otherwise do not retry a successful request
+//             Err(error) => default_on_request_failure(error),
+//         }
+//     }
+// }
 
-async fn get_last_viewed_at(
-    plex_client: &PlexClient,
-    initial_rating_key: &str,
-) -> Option<i64> {
+async fn get_last_viewed_at(plex_client: &PlexClient, initial_rating_key: &str) -> Option<i64> {
     let mut queue = VecDeque::from(vec![initial_rating_key.to_string()]);
 
     while let Some(rating_key) = queue.pop_front() {
-        let mut children =
-            match MetaDataChildren::get(plex_client, &rating_key).await {
-                Ok(data) => data,
-                Err(_) => continue,
-            };
+        let mut children = match MetaDataChildren::get(plex_client, &rating_key).await {
+            Ok(data) => data,
+            Err(_) => continue,
+        };
 
         // Iterate backwards over the children
         for child in children.children().iter().rev() {
@@ -70,21 +62,15 @@ async fn get_last_viewed_at(
     None
 }
 
-pub async fn sort_by_last_viewed(
-    plex_client: &PlexClient,
-    items: &mut [MetaData],
-) {
+pub async fn sort_by_last_viewed(plex_client: &PlexClient, items: &mut [MetaData]) {
     let futures: Vec<_> = items
         .iter_mut()
-        .filter(|item| {
-            item.last_viewed_at.is_none() && item.rating_key.is_some()
-        })
+        .filter(|item| item.last_viewed_at.is_none() && item.rating_key.is_some())
         .map(|item| {
             let rating_key = item.rating_key.as_ref().unwrap().clone();
             async move {
                 // Execute the async function to fetch last viewed at date
-                let last_viewed_at =
-                    get_last_viewed_at(plex_client, &rating_key).await;
+                let last_viewed_at = get_last_viewed_at(plex_client, &rating_key).await;
                 (item, last_viewed_at)
             }
         })
@@ -166,11 +152,7 @@ pub fn replace_query(query: MultiMap<String, String>, req: &mut SalvoRequest) {
     }
 }
 
-pub fn add_query_param_salvo(
-    req: &mut SalvoRequest,
-    param: String,
-    value: String,
-) {
+pub fn add_query_param_salvo(req: &mut SalvoRequest, param: String, value: String) {
     let mut url = url_from_request(req);
 
     // Modify the query as needed
@@ -184,12 +166,9 @@ pub fn add_query_param_salvo(
     }
 }
 
-pub fn get_content_type_from_headers(
-    headers: &HeaderMap<HeaderValue>,
-) -> ContentType {
+pub fn get_content_type_from_headers(headers: &HeaderMap<HeaderValue>) -> ContentType {
     // Define a static header value for fallback
-    static DEFAULT_HEADER_VALUE: HeaderValue =
-        HeaderValue::from_static("text/xml;charset=utf-8");
+    static DEFAULT_HEADER_VALUE: HeaderValue = HeaderValue::from_static("text/xml;charset=utf-8");
 
     // Try to extract either 'content-type' or 'accept' headers
     let content_type_str = headers
@@ -228,31 +207,19 @@ pub fn hero_meta() -> Meta {
         display_fields: vec![
             DisplayField {
                 r#type: Some("movie".to_string()),
-                fields: vec![
-                    "title".to_string(),
-                    "originallyAvailableAt".to_string(),
-                ],
+                fields: vec!["title".to_string(), "originallyAvailableAt".to_string()],
             },
             DisplayField {
                 r#type: Some("show".to_string()),
-                fields: vec![
-                    "title".to_string(),
-                    "originallyAvailableAt".to_string(),
-                ],
+                fields: vec!["title".to_string(), "originallyAvailableAt".to_string()],
             },
             DisplayField {
                 r#type: Some("clip".to_string()),
-                fields: vec![
-                    "title".to_string(),
-                    "originallyAvailableAt".to_string(),
-                ],
+                fields: vec!["title".to_string(), "originallyAvailableAt".to_string()],
             },
             DisplayField {
                 r#type: Some("mixed".to_string()),
-                fields: vec![
-                    "title".to_string(),
-                    "originallyAvailableAt".to_string(),
-                ],
+                fields: vec!["title".to_string(), "originallyAvailableAt".to_string()],
             },
         ],
         display_images: vec![
@@ -346,10 +313,7 @@ pub fn hero_meta() -> Meta {
 //     Ok(result)
 // }
 
-pub async fn to_string(
-    container: MediaContainer,
-    content_type: &ContentType,
-) -> Result<String> {
+pub async fn to_string(container: MediaContainer, content_type: &ContentType) -> Result<String> {
     match content_type {
         ContentType::Json => Ok(serde_json::to_string(&container).unwrap()),
         // ContentType::Xml => Ok("".to_owned()),
@@ -358,10 +322,7 @@ pub async fn to_string(
 }
 
 // TODO: Merge hub keys when mixed
-pub fn merge_children_keys(
-    mut key_left: String,
-    mut key_right: String,
-) -> String {
+pub fn merge_children_keys(mut key_left: String, mut key_right: String) -> String {
     key_left = key_left.replace("/hubs/library/collections/", "");
     key_left = key_left.replace("/library/collections/", "");
     key_left = key_left.replace("/children", "");

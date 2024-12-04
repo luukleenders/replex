@@ -456,7 +456,10 @@ impl Transform for HubStyleTransform {
                 item.style = style.style;
 
                 item.r#type = style.r#type;
-                item.meta = Some(hero_meta());
+
+                if style.include_meta {
+                    item.meta = Some(hero_meta());
+                }
 
                 let mut futures = FuturesOrdered::new();
                 // let now = Instant::now();

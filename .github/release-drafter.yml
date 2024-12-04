@@ -7,16 +7,14 @@ template: |
 
   $CHANGES
 
-exclude-labels:
-  - cargo-bump
-
 categories:
   - title: '🚀 Features'
     label: feature
   - title: '🐛 Bug Fixes'
+    collapse-after: 1
     label: fix
   - title: '🧹 Chores'
-    collapse-after: 2
+    collapse-after: 1
     label: chore
 
 version-resolver:
