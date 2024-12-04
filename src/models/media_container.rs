@@ -28,7 +28,6 @@ struct_imports!();
 
 #[struct_derives()]
 #[serde(rename_all = "camelCase")]
-#[yaserde(root = "MediaContainer")]
 pub struct WrappedMediaContainer {
     #[serde(default, rename = "MediaContainer")]
     pub media_container: MediaContainer,
@@ -100,34 +99,33 @@ where
 #[struct_derives()]
 #[serde_as]
 #[serde(rename_all = "camelCase")]
-#[yaserde(root = "MediaContainer")]
 pub struct MediaContainer {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub size: Option<i64>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "totalSize")]
+    #[yaserde(attribute = true, rename = "totalSize")]
     pub total_size: Option<i32>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub offset: Option<i32>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "allowSync")]
+    #[yaserde(attribute = true, rename = "allowSync")]
     pub allow_sync: Option<SpecialBool>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub identifier: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub parent_title: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub title_2: Option<String>,
 
     #[serde(
@@ -136,15 +134,15 @@ pub struct MediaContainer {
         skip_serializing_if = "Option::is_none",
         deserialize_with = "option_number_from_string"
     )]
-    #[yaserde(attribute, rename = "librarySectionID")]
+    #[yaserde(attribute = true, rename = "librarySectionID")]
     pub library_section_id: Option<i64>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "librarySectionTitle")]
+    #[yaserde(attribute = true, rename = "librarySectionTitle")]
     pub library_section_title: Option<String>,
 
     #[serde(rename = "librarySectionUUID", skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "librarySectionUUID")]
+    #[yaserde(attribute = true, rename = "librarySectionUUID")]
     pub library_section_uuid: Option<String>,
 
     #[serde(default, rename = "Hub", skip_serializing_if = "Vec::is_empty")]
@@ -168,7 +166,7 @@ pub struct MediaContainer {
         rename = "playQueueID",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "playQueueID")]
+    #[yaserde(attribute = true, rename = "playQueueID")]
     pub play_queue_id: Option<i64>,
 
     #[serde(
@@ -176,7 +174,7 @@ pub struct MediaContainer {
         rename = "playQueueSelectedItemID",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "playQueueSelectedItemID")]
+    #[yaserde(attribute = true, rename = "playQueueSelectedItemID")]
     pub play_queue_selected_item_id: Option<i64>,
 
     #[serde(
@@ -184,7 +182,7 @@ pub struct MediaContainer {
         rename = "playQueueSelectedItemOffset",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "playQueueSelectedItemOffset")]
+    #[yaserde(attribute = true, rename = "playQueueSelectedItemOffset")]
     pub play_queue_selected_item_offset: Option<i32>,
 
     #[serde(
@@ -192,7 +190,7 @@ pub struct MediaContainer {
         rename = "playQueueSelectedMetadataItemID",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "playQueueSelectedMetadataItemID")]
+    #[yaserde(attribute = true, rename = "playQueueSelectedMetadataItemID")]
     pub play_queue_selected_metadata_item_id: Option<String>,
 
     #[serde(
@@ -200,7 +198,7 @@ pub struct MediaContainer {
         rename = "playQueueShuffled",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "playQueueShuffled")]
+    #[yaserde(attribute = true, rename = "playQueueShuffled")]
     pub play_queue_shuffled: Option<bool>,
 
     #[serde(
@@ -208,7 +206,7 @@ pub struct MediaContainer {
         rename = "playQueueSourceURI",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "playQueueSourceURI")]
+    #[yaserde(attribute = true, rename = "playQueueSourceURI")]
     pub play_queue_source_uri: Option<String>,
 
     #[serde(
@@ -216,7 +214,7 @@ pub struct MediaContainer {
         rename = "playQueueTotalCount",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "playQueueTotalCount")]
+    #[yaserde(attribute = true, rename = "playQueueTotalCount")]
     pub play_queue_total_count: Option<i32>,
 
     #[serde(
@@ -224,7 +222,7 @@ pub struct MediaContainer {
         rename = "playQueueVersion",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "playQueueVersion")]
+    #[yaserde(attribute = true, rename = "playQueueVersion")]
     pub play_queue_version: Option<i32>,
 
     #[serde(
@@ -232,7 +230,7 @@ pub struct MediaContainer {
         rename = "mediaTagPrefix",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "mediaTagPrefix")]
+    #[yaserde(attribute = true, rename = "mediaTagPrefix")]
     pub media_tag_prefix: Option<String>,
 
     #[serde(
@@ -241,7 +239,7 @@ pub struct MediaContainer {
         deserialize_with = "option_number_from_string",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "mediaTagVersion")]
+    #[yaserde(attribute = true, rename = "mediaTagVersion")]
     pub media_tag_version: Option<i64>,
 
     #[serde(
@@ -250,7 +248,7 @@ pub struct MediaContainer {
         deserialize_with = "option_number_from_string",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "directPlayDecisionCode")]
+    #[yaserde(attribute = true, rename = "directPlayDecisionCode")]
     pub direct_play_decision_code: Option<i64>,
 
     #[serde(
@@ -258,7 +256,7 @@ pub struct MediaContainer {
         rename = "directPlayDecisionText",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "directPlayDecisionText")]
+    #[yaserde(attribute = true, rename = "directPlayDecisionText")]
     pub direct_play_decision_text: Option<String>,
 
     #[serde(
@@ -267,7 +265,7 @@ pub struct MediaContainer {
         deserialize_with = "option_number_from_string",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "generalDecisionCode")]
+    #[yaserde(attribute = true, rename = "generalDecisionCode")]
     pub general_decision_code: Option<i64>,
 
     #[serde(
@@ -275,7 +273,7 @@ pub struct MediaContainer {
         rename = "generalDecisionText",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "generalDecisionText")]
+    #[yaserde(attribute = true, rename = "generalDecisionText")]
     pub general_decision_text: Option<String>,
 
     #[serde(
@@ -283,7 +281,7 @@ pub struct MediaContainer {
         rename = "resourceSession",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "resourceSession")]
+    #[yaserde(attribute = true, rename = "resourceSession")]
     pub resource_session: Option<String>,
 
     #[serde(
@@ -292,7 +290,7 @@ pub struct MediaContainer {
         deserialize_with = "option_number_from_string",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "transcodeDecisionCode")]
+    #[yaserde(attribute = true, rename = "transcodeDecisionCode")]
     pub transcode_decision_code: Option<i64>,
 
     #[serde(
@@ -300,11 +298,11 @@ pub struct MediaContainer {
         rename = "transcodeDecisionText",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "transcodeDecisionText")]
+    #[yaserde(attribute = true, rename = "transcodeDecisionText")]
     pub transcode_decision_text: Option<String>,
 
     #[serde(default, rename = "Meta", skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "Meta")]
+    #[yaserde(attribute = true, rename = "Meta")]
     pub meta: Option<Meta>,
 }
 

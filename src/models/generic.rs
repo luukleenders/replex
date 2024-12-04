@@ -42,55 +42,59 @@ pub trait FromResponse<T>: Sized {
 
 #[struct_derives()]
 pub struct Guid {
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     id: String,
 }
 
 #[struct_derives()]
 pub struct Tag {
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     tag: String,
 }
 
 #[struct_derives()]
-pub struct Image {
+pub struct Image{
     #[serde(default)]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub alt: Option<String>,
 
     #[serde(default, rename = "type")]
-    #[yaserde(attribute, rename = "type")]
+    #[yaserde(attribute = true, rename = "type")]
     pub r#type: String,
 
     #[serde(default)]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub url: String,
 }
 
 #[struct_derives()]
 #[serde(rename_all = "camelCase")]
 pub struct Label {
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     #[serde(deserialize_with = "deserialize_number_from_string")]
     id: i64,
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub tag: String,
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     filter: String,
+}
+
+fn default_image() -> Vec<Image> {
+    vec![Image::default()]
 }
 
 #[struct_derives()]
 #[serde(rename_all = "camelCase")]
 pub struct Context {
     #[serde(rename = "Image", default, skip_serializing_if = "Vec::is_empty")]
-    #[yaserde(rename = "Image", default, child)]
+    #[yaserde(rename = "Image", default = "default_image")]
     pub images: Vec<Image>,
 }
 
 #[struct_derives()]
 #[serde(rename_all = "camelCase")]
 pub struct DisplayField {
-    #[yaserde(attribute, rename = "type")]
+    #[yaserde(attribute = true, rename = "type")]
     pub r#type: Option<String>,
     pub fields: Vec<String>,
 }
@@ -98,24 +102,24 @@ pub struct DisplayField {
 #[struct_derives()]
 #[serde(rename_all = "camelCase")]
 pub struct MetaType {
-    #[yaserde(attribute, rename = "type")]
+    #[yaserde(attribute = true, rename = "type")]
     pub r#type: Option<String>,
 
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub active: Option<bool>,
 
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub title: Option<String>,
 }
 
 #[struct_derives()]
 #[serde(rename_all = "camelCase")]
 pub struct DisplayImage {
-    #[yaserde(attribute, rename = "type")]
+    #[yaserde(attribute = true, rename = "type")]
     pub r#type: Option<String>,
 
     #[serde(rename = "imageType")]
-    #[yaserde(attribute, rename = "imageType")]
+    #[yaserde(attribute = true, rename = "imageType")]
     pub image_type: Option<String>,
 }
 
@@ -129,9 +133,9 @@ pub struct Meta {
     pub display_images: Vec<DisplayImage>,
 
     #[serde(default)]
-    #[yaserde(attribute, rename = "type")]
+    #[yaserde(attribute = true, rename = "type")]
     pub r#type: Option<MetaType>,
-    // #[yaserde(attribute)]
+    // #[yaserde(attribute = true)]
     // #[serde(skip_serializing_if = "Option::is_none")]
     // pub style: Option<String>,
 }
@@ -139,6 +143,7 @@ pub struct Meta {
 #[derive(Debug)]
 pub struct ClientHeroStyle {
     pub _enabled: bool,
+    pub include_meta: bool,
     pub r#type: String,
     pub style: Option<String>,
     pub child_type: Option<String>,
@@ -150,6 +155,7 @@ impl Default for ClientHeroStyle {
     fn default() -> Self {
         Self {
             _enabled: true,
+            include_meta: true,
             style: Some("hero".to_string()),
             r#type: "mixed".to_string(),
             child_type: None,
@@ -163,7 +169,7 @@ impl ClientHeroStyle {
     pub fn from_context(context: &PlexContext) -> Self {
         // pub fn android(product: String, platform_version: String) -> Self {
         let product = context.product.clone().unwrap_or_default();
-        let device_type = DeviceType::from_product(product);
+        let device_type = DeviceType::from_product(product.clone());
         let platform = context.platform.clone();
         // let platform_version = context.platform_version.clone().unwrap_or_default();
 
@@ -194,7 +200,13 @@ impl ClientHeroStyle {
             Platform::Roku => ClientHeroStyle::roku(),
             Platform::Ios => ClientHeroStyle::ios_style(),
             Platform::TvOS => ClientHeroStyle::tvos_style(),
-            _ => ClientHeroStyle::default(),
+            _ => {
+                if product.clone().to_lowercase() == "plex web" {
+                    ClientHeroStyle::web()
+                } else {
+                    ClientHeroStyle::default()
+                }
+            }
             // _ => {
             //     if product.starts_with("Plex HTPC") {
             //         ClientHeroStyle::htpc_style()
@@ -209,6 +221,15 @@ impl ClientHeroStyle {
             //         }
             //     }
             // }
+        }
+    }
+
+    pub fn web() -> Self {
+        Self {
+            include_meta: false,
+            cover_art_as_art: true,
+            cover_art_as_thumb: true,
+            ..ClientHeroStyle::default()
         }
     }
 

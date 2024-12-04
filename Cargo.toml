@@ -71,8 +71,8 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 uncased = "0.9.9"
 url = "2.3.1"
 xml-rs = "0.8.16"
-yaserde = "0.8.0"
-yaserde_derive = "0.8.0"
+yaserde = "0.12.0"
+yaserde_derive = "0.12.0"
 #format_serde_error = "0.3"
 
 [dev-dependencies]

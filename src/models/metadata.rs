@@ -12,192 +12,212 @@ use replex_common::{struct_derives, struct_imports};
 
 struct_imports!();
 
+fn default_label() -> Vec<Label> {
+    vec![Label::default()]
+}
+
+fn default_image() -> Vec<Image> {
+    vec![Image::default()]
+}
+
+fn default_media() -> Vec<Media> {
+    vec![Media::default()]
+}
+
+fn default_guid() -> Vec<Guid> {
+    vec![Guid::default()]
+}
+
+fn default_tag() -> Vec<Tag> {
+    vec![Tag::default()]
+}
+
 #[struct_derives()]
 #[serde(rename_all = "camelCase")]
 #[serde_as]
 pub struct MetaData {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "ratingKey")]
+    #[yaserde(attribute = true, rename = "ratingKey")]
     pub rating_key: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub key: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub guid: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "primaryGuid")]
+    #[yaserde(attribute = true, rename = "primaryGuid")]
     pub primary_guid: Option<String>,
 
     #[serde(default)]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub title: String,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub slug: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub tagline: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub thumb: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub theme: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub composite: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub banner: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub icon: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub view_group: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "addedAt")]
+    #[yaserde(attribute = true, rename = "addedAt")]
     pub added_at: Option<i64>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "updatedAt")]
+    #[yaserde(attribute = true, rename = "updatedAt")]
     pub updated_at: Option<i64>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "lastViewedAt")]
+    #[yaserde(attribute = true, rename = "lastViewedAt")]
     pub last_viewed_at: Option<i64>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "includedAt")]
+    #[yaserde(attribute = true, rename = "includedAt")]
     pub included_at: Option<i64>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub duration: Option<i64>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub view_mode: Option<i32>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub art: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub index: Option<i32>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub subtype: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub studio: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "contentRating")]
+    #[yaserde(attribute = true, rename = "contentRating")]
     pub content_rating: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub rating: Option<f64>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "audienceRating")]
+    #[yaserde(attribute = true, rename = "audienceRating")]
     pub audience_rating: Option<f64>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "viewOffset")]
+    #[yaserde(attribute = true, rename = "viewOffset")]
     pub view_offset: Option<i64>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "primaryExtraKey")]
+    #[yaserde(attribute = true, rename = "primaryExtraKey")]
     pub primary_extra_key: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "chapterSource")]
+    #[yaserde(attribute = true, rename = "chapterSource")]
     pub chapter_source: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "ratingImage")]
+    #[yaserde(attribute = true, rename = "ratingImage")]
     pub rating_image: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "audienceRatingImage")]
+    #[yaserde(attribute = true, rename = "audienceRatingImage")]
     pub audiance_rating_image: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "parentYear")]
+    #[yaserde(attribute = true, rename = "parentYear")]
     pub parent_year: Option<i32>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "parentIndex")]
+    #[yaserde(attribute = true, rename = "parentIndex")]
     pub parent_index: Option<u32>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "parentGuid")]
+    #[yaserde(attribute = true, rename = "parentGuid")]
     pub parent_guid: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "parentStudio")]
+    #[yaserde(attribute = true, rename = "parentStudio")]
     pub parent_studio: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "parentKey")]
+    #[yaserde(attribute = true, rename = "parentKey")]
     pub parent_key: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "parentRatingKey")]
+    #[yaserde(attribute = true, rename = "parentRatingKey")]
     pub parent_rating_key: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "parentTitle")]
+    #[yaserde(attribute = true, rename = "parentTitle")]
     pub parent_title: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "parentArt")]
+    #[yaserde(attribute = true, rename = "parentArt")]
     pub parent_art: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "parentThumb")]
+    #[yaserde(attribute = true, rename = "parentThumb")]
     pub parent_thumb: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "grandparentRatingKey")]
+    #[yaserde(attribute = true, rename = "grandparentRatingKey")]
     pub grandparent_rating_key: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "grandparentKey")]
+    #[yaserde(attribute = true, rename = "grandparentKey")]
     pub grandparent_key: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "grandparentGuid")]
+    #[yaserde(attribute = true, rename = "grandparentGuid")]
     pub grandparent_guid: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "grandparentTitle")]
+    #[yaserde(attribute = true, rename = "grandparentTitle")]
     pub grandparent_title: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "grandparentThumb")]
+    #[yaserde(attribute = true, rename = "grandparentThumb")]
     pub grandparent_thumb: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "grandparentArt")]
+    #[yaserde(attribute = true, rename = "grandparentArt")]
     pub grandparent_art: Option<String>,
 
     #[serde(
@@ -206,67 +226,67 @@ pub struct MetaData {
         deserialize_with = "option_number_from_string",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "librarySectionID")]
+    #[yaserde(attribute = true, rename = "librarySectionID")]
     pub library_section_id: Option<i64>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "librarySectionTitle")]
+    #[yaserde(attribute = true, rename = "librarySectionTitle")]
     pub library_section_title: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "librarySectionKey")]
+    #[yaserde(attribute = true, rename = "librarySectionKey")]
     pub library_section_key: Option<String>,
 
     #[serde(default)]
-    #[yaserde(attribute, rename = "type")]
+    #[yaserde(attribute = true, rename = "type")]
     pub r#type: String,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub summary: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub year: Option<i32>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub promoted: Option<SpecialBool>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "skipDetails")]
+    #[yaserde(attribute = true, rename = "skipDetails")]
     pub skip_details: Option<SpecialBool>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub placeholder: Option<bool>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub context: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "hubKey")]
+    #[yaserde(attribute = true, rename = "hubKey")]
     pub hub_key: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "hubIdentifier")]
+    #[yaserde(attribute = true, rename = "hubIdentifier")]
     pub hub_identifier: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub size: Option<i32>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub more: Option<SpecialBool>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute)]
+    #[yaserde(attribute = true)]
     pub style: Option<String>,
 
     #[serde(default, rename = "Meta", skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "Meta")]
+    #[yaserde(attribute = true, rename = "Meta")]
     pub meta: Option<Meta>,
 
     #[serde(default, rename = "Metadata", skip_serializing_if = "Vec::is_empty")]
@@ -286,55 +306,55 @@ pub struct MetaData {
         deserialize_with = "option_string_from_number",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "childCount")]
+    #[yaserde(attribute = true, rename = "childCount")]
     pub child_count: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "skipChildren")]
+    #[yaserde(attribute = true, rename = "skipChildren")]
     pub skip_children: Option<bool>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "leafCount")]
+    #[yaserde(attribute = true, rename = "leafCount")]
     pub leaf_count: Option<i32>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "viewedLeafCount")]
+    #[yaserde(attribute = true, rename = "viewedLeafCount")]
     pub viewed_leaf_count: Option<i32>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "viewCount")]
+    #[yaserde(attribute = true, rename = "viewCount")]
     pub view_count: Option<i32>,
 
     #[serde(default, rename = "Label", skip_serializing_if = "Vec::is_empty")]
-    #[yaserde(default, child, rename = "Label")]
+    #[yaserde(default = "default_label", rename = "Label")]
     pub labels: Vec<Label>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "originallyAvailableAt")]
+    #[yaserde(attribute = true, rename = "originallyAvailableAt")]
     pub originally_available_at: Option<String>,
 
     #[serde(default, rename = "Media", skip_serializing_if = "Vec::is_empty")]
-    #[yaserde(default, child, rename = "Media")]
+    #[yaserde(default = "default_media", rename = "Media")]
     pub media: Vec<Media>,
 
     #[serde(default, rename = "Guid", skip_serializing_if = "Vec::is_empty")]
-    #[yaserde(default, child, rename = "Guid")]
+    #[yaserde(default = "default_guid", rename = "Guid")]
     pub guids: Vec<Guid>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "userState")]
+    #[yaserde(attribute = true, rename = "userState")]
     pub user_state: Option<SpecialBool>,
 
     #[serde(default, rename = "Image", skip_serializing_if = "Vec::is_empty")]
-    #[yaserde(default, child, rename = "Image")]
+    #[yaserde(default = "default_image", rename = "Image")]
     pub images: Vec<Image>,
 
     #[serde(default, rename = "Context", skip_serializing_if = "Option::is_none")]
-    #[yaserde(child, rename = "Context")]
+    #[yaserde(rename = "Context")]
     pub context_images: Option<Context>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute, rename = "extraType")]
+    #[yaserde(attribute = true, rename = "extraType")]
     pub extra_type: Option<i32>, // actually a bool but plex does 0 and 1
 
     #[serde(
@@ -342,23 +362,23 @@ pub struct MetaData {
         rename = "playQueueItemID",
         skip_serializing_if = "Option::is_none"
     )]
-    #[yaserde(attribute, rename = "playQueueItemID")]
+    #[yaserde(attribute = true, rename = "playQueueItemID")]
     pub play_queue_item_id: Option<i64>,
 
     #[serde(default, rename = "Collection", skip_serializing_if = "Vec::is_empty")]
-    #[yaserde(default, child, rename = "Collection")]
+    #[yaserde(default = "default_tag", rename = "Collection")]
     pub collections: Vec<Tag>,
 
     #[serde(default, rename = "Country", skip_serializing_if = "Vec::is_empty")]
-    #[yaserde(default, child, rename = "Country")]
+    #[yaserde(default = "default_tag", rename = "Country")]
     pub countries: Vec<Tag>,
 
     #[serde(default, rename = "Director", skip_serializing_if = "Vec::is_empty")]
-    #[yaserde(default, child, rename = "Director")]
+    #[yaserde(default = "default_tag", rename = "Director")]
     pub directors: Vec<Tag>,
 
     #[serde(default, rename = "Genre", skip_serializing_if = "Vec::is_empty")]
-    #[yaserde(default, child, rename = "Genre")]
+    #[yaserde(default = "default_tag", rename = "Genre")]
     pub genres: Vec<Tag>,
 }
 

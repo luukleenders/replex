@@ -35,8 +35,11 @@ impl Transform for HubStyleTransform {
 
         item.style = style.style;
         item.r#type = style.r#type;
-        item.meta = Some(hero_meta());
         item.placeholder = Some(true);
+
+        if style.include_meta {
+            item.meta = Some(hero_meta());
+        }
 
         for mut child in children {
             if let Some(ref child_type) = child_type {

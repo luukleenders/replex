@@ -18,6 +18,7 @@ pub enum Platform {
     Safari,
     Chrome,
     Roku,
+    Web,
 
     #[serde(rename = "iOS")]
     #[strum(serialize = "iOS")]

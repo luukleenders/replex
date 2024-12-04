@@ -16,7 +16,7 @@ pub fn derives(_args: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as Item);
 
     let output = match input {
-        Item::Struct(item_enum) => {
+        Item::Struct(item_struct) => {
             quote! {
                 #[derive(
                     Clone,
@@ -31,11 +31,11 @@ pub fn derives(_args: TokenStream, input: TokenStream) -> TokenStream {
                     YaSerialize,
                     YaDeserialize,
                 )]
-                #item_enum
+                #item_struct
             }
         }
         _ => {
-            return syn::Error::new_spanned(input, "This attribute can only be used with enums")
+            return syn::Error::new_spanned(input, "This attribute can only be used with structs")
                 .to_compile_error()
                 .into();
         }

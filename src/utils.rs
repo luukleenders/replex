@@ -4,7 +4,7 @@ use anyhow::Result;
 use futures::future::join_all;
 use mime::Mime;
 use multimap::MultiMap;
-use reqwest_retry::{default_on_request_failure, Retryable, RetryableStrategy};
+// use reqwest_retry::{default_on_request_failure, Retryable, RetryableStrategy};
 use salvo::http::HeaderValue;
 use url::Url;
 use yaserde::ser::to_string as to_xml_str;
@@ -19,20 +19,20 @@ use crate::models::{ContentType, DisplayField, DisplayImage, MediaContainer, Met
 use crate::plex::client::PlexClient;
 use crate::plex::traits::MetaDataChildren;
 
-struct Retry401;
-impl RetryableStrategy for Retry401 {
-    fn handle(
-        &self,
-        res: &std::result::Result<reqwest::Response, reqwest_middleware::Error>,
-    ) -> Option<Retryable> {
-        match res {
-            Ok(success) if success.status() == 401 => Some(Retryable::Transient),
-            Ok(_success) => None,
-            // otherwise do not retry a successful request
-            Err(error) => default_on_request_failure(error),
-        }
-    }
-}
+// struct Retry401;
+// impl RetryableStrategy for Retry401 {
+//     fn handle(
+//         &self,
+//         res: &std::result::Result<reqwest::Response, reqwest_middleware::Error>,
+//     ) -> Option<Retryable> {
+//         match res {
+//             Ok(success) if success.status() == 401 => Some(Retryable::Transient),
+//             Ok(_success) => None,
+//             // otherwise do not retry a successful request
+//             Err(error) => default_on_request_failure(error),
+//         }
+//     }
+// }
 
 async fn get_last_viewed_at(plex_client: &PlexClient, initial_rating_key: &str) -> Option<i64> {
     let mut queue = VecDeque::from(vec![initial_rating_key.to_string()]);
