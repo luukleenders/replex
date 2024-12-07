@@ -15,7 +15,7 @@ on:
 jobs:
   update-cargo:
     name: Update Cargo.toml version
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       is_changed: ${{ steps.check-changes.outputs.is_changed }}
 
@@ -53,7 +53,7 @@ jobs:
     name: Commit & Push changes
     if: needs.update-cargo.outputs.is_changed == 'true'
     needs: update-cargo
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       is_merged: ${{ steps.merge.outputs.result }}
 

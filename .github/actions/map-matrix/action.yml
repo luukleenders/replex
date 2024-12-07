@@ -24,14 +24,14 @@ runs:
           const platformMap = {
             "linux/amd64": {
               build: "linux/amd64",
-              os: "ubuntu-latest",
+              os: "ubuntu-24.04",
               target: "x86_64-unknown-linux-gnu",
               input: `target/x86_64-unknown-linux-gnu/${profile}/replex`,
               output: "./bin/x86_64-unknown-linux-gnu/replex",
             },
             "linux/arm64": {
               build: "linux/arm64",
-              os: "ubuntu-latest",
+              os: "ubuntu-24.04",
               target: "aarch64-unknown-linux-gnu",
               input: `target/aarch64-unknown-linux-gnu/${profile}/replex`,
               output: "./bin/aarch64-unknown-linux-gnu/replex",
@@ -52,7 +52,7 @@ runs:
             },
             "windows/amd64": {
               build: "windows/amd64",
-              os: "ubuntu-latest",
+              os: "ubuntu-24.04",
               target: "x86_64-pc-windows-gnu",
               input: `target/x86_64-pc-windows-gnu/${profile}/replex.exe`,
               output: "./bin/x86_64-pc-windows-gnu/replex.exe",
