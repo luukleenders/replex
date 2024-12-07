@@ -1,5 +1,5 @@
 # Use Debian slim as the base image for its small footprint and compatibility.
-FROM debian:bookworm-slim
+FROM ubuntu:24.04
 
 # ARG can be used to pass the target platform for multi-platform builds.
 ARG TARGETPLATFORM
