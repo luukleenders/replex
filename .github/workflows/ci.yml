@@ -21,7 +21,7 @@ jobs:
   setup:
     name: Setup CI
     if: github.head_ref != 'chore/update-version'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - id: setup
         shell: bash
