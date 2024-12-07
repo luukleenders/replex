@@ -1,4 +1,4 @@
-# Plex host
+# Plex host (with protocol)
 host: "http://localhost:32400"
 
 # Port that the Replex server will run on
