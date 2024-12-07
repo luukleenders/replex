@@ -87,7 +87,9 @@ hero_rows:
 priority_hubs:
 ```
 
-## Features
+## Features 
+Note: for all features see the config.yaml example
+
 ### Interleaved rows
 Collection hubs with the same name from different libraries will be merged into one on the home screen.
 So a collection named "Trending" in the Movie library will be merged with a collection named "Trending" from a TV Show library on the home screen.
@@ -120,12 +122,6 @@ Example: if `transcode_fallback_for` is set to "4k" then 4k transcodes will fall
 
 ### Disable related content
 See: https://github.com/lostb1t/replex/issues/26
-
-### Disable leaf count
-Remove episode count label from show artwork.
-
-### Disable user state
-Remove watched badges from hub items. <small>*does not work on all clients</small>
 
 ### Better on Deck
 The `better_on_deck` feature is an attempt to improve (subjective) the "Continue Watching" and "On Deck" hubs on the Plex home screen.
