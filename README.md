@@ -1,6 +1,6 @@
 # Replex
 This project is a hard fork of the original [lostb1t/replex project](https://github.com/lostb1t/replex/).
-All credit goes to the original author, this hard fork was my way of learning Rust.
+All credit goes to the original author, refactoring this project was my way of learning Rust.
 
 The project is in a working state at the moment, but I have not tested it extensively with different clients.
 
@@ -9,10 +9,20 @@ The project is in a working state at the moment, but I have not tested it extens
 $ cargo watch -x run
 ```
 
-## Config Yaml
-Configuring the project can still be done via environment variables, but doing so using a yaml file is also supported.
+### Docker compose example
+```yaml
+  replex:
+    container_name: replex
+    image: ghcr.io/luukleenders/replex:latest
+    volumes:
+      - /path/to/config:/config
+    restart: unless-stopped
+```
 
-The config file is located at `config/config.yaml`. Here is an example config file:
+## Config Yaml
+Configuring the project can still be done via environment variables, but doing so using a yaml file is recommended.
+
+The config file is located at `config/config.yaml`. Below is an example with all available options:
 ```yaml
 # Plex host
 host: "http://localhost:32400"
@@ -98,7 +108,7 @@ So a collection named "Trending" in the Movie library will be merged with a coll
 Useful for when you're on an app box, in which case it might not be ideal to stream media through Replex.
 
 Note: Plex doesn't handle redirects well, and will not remember them.
-So every chuck of a stream will first hit Replex before being redirected to the redirect url.
+So every chunk of a stream will first hit Replex before being redirected to the redirect url.
 It is recommended to run Replex on the same machine as the Plex server.
 
 ### Auto select version
