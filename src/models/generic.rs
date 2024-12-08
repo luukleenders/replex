@@ -172,7 +172,7 @@ impl ClientHeroStyle {
         let device_type = DeviceType::from_product(product.clone());
         let platform = context.platform.clone();
         // let platform_version = context.platform_version.clone().unwrap_or_default();
-
+        
         match platform {
             Platform::Android => {
                 match device_type {
@@ -200,6 +200,7 @@ impl ClientHeroStyle {
             Platform::Roku => ClientHeroStyle::roku(),
             Platform::Ios => ClientHeroStyle::ios_style(),
             Platform::TvOS => ClientHeroStyle::tvos_style(),
+            Platform::Generic => ClientHeroStyle::generic(),
             _ => {
                 if product.clone().to_lowercase() == "plex web" {
                     ClientHeroStyle::web()
@@ -224,10 +225,16 @@ impl ClientHeroStyle {
         }
     }
 
+    pub fn generic() -> Self {
+        Self {
+            include_meta: false,
+            ..ClientHeroStyle::default()
+        }
+    }
+
     pub fn web() -> Self {
         Self {
             include_meta: false,
-            cover_art_as_art: true,
             cover_art_as_thumb: true,
             ..ClientHeroStyle::default()
         }
