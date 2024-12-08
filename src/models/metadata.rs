@@ -445,12 +445,22 @@ impl MetaData {
     }
 
     pub fn is_watched(&self) -> bool {
-        if self.view_count.is_some() && self.view_count.unwrap_or_default() > 0 {
-            return true;
+        let view_count = self.view_count.clone();
+        let leaf_count = self.leaf_count.clone();
+        let viewed_leaf_count = self.viewed_leaf_count.clone();
+
+        if view_count.is_some() && view_count.unwrap() > 0 {
+            if leaf_count.is_none() && viewed_leaf_count.is_none() {
+                return true;
+            }
         }
-        if self.viewed_leaf_count.is_some() && self.viewed_leaf_count.unwrap_or_default() > 0 {
-            return true;
+
+        if let (Some(leaf_count), Some(viewed_leaf_count)) = (leaf_count, viewed_leaf_count) {
+            if leaf_count == viewed_leaf_count {
+                return true;
+            }
         }
+
         false
     }
 
@@ -459,15 +469,29 @@ impl MetaData {
             return Ok(false);
         }
 
+        let config = Config::load();
+
+        if config.exclude_watched.all {
+            return Ok(true);
+        }
+
         let collection = Collection::get(plex_client, get_collection_id_from_hub(self)).await?;
 
-        // config.exclude_watched
-        // ||
-        Ok(collection
+        let has_excluded_label = collection
             .metadata
             .first()
             .unwrap()
-            .has_label("REPLEX_EXCLUDE_WATCHED".to_string()))
+            .has_label("REPLEX_EXCLUDE_WATCHED".to_string());
+
+        let is_config_excluded = config
+            .exclude_watched
+            .collections
+            .as_ref()
+            .map_or(false, |collections| {
+                collections.contains(&collection.metadata.first().unwrap().title)
+            });
+
+        Ok(has_excluded_label || is_config_excluded)
     }
 
     pub fn get_type(&self) -> String {

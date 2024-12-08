@@ -378,14 +378,19 @@ impl MediaContainer {
     }
 
     pub fn exclude_watched(&self) -> bool {
-        let _config = Config::load();
+        let config = Config::load();
 
-        // if config.exclude_watched {
-        //     return true;
-        // }
+        if config.exclude_watched.all  {
+            return true;
+        }
 
         if let Some(first_meta) = self.metadata.first() {
-            return first_meta.has_label("REPLEX_EXCLUDE_WATCHED".to_string());
+            let has_excluded_label = first_meta.has_label("REPLEX_EXCLUDE_WATCHED".to_string());
+            let is_config_excluded = config.exclude_watched.collections.as_ref().map_or(false, |collections| {
+                collections.contains(&first_meta.title)
+            });
+
+            return has_excluded_label || is_config_excluded;
         }
 
         false

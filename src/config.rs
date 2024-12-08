@@ -38,9 +38,9 @@ pub struct Config {
 
     pub exclude_watched: pub struct ExcludeWatched {
         #[serde(default, deserialize_with = "bool_from_str_or_int")]
-        all: bool,
+        pub all: bool,
         #[serde(default, deserialize_with = "vec_from_comma_separated_or_list")]
-        collections: Option<Vec<String>>,
+        pub collections: Option<Vec<String>>,
     },
 
     pub redirect_streams: pub struct RedirectStreams {
