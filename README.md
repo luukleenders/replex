@@ -4,12 +4,12 @@ All credit goes to the original author, refactoring this project was my way of l
 
 The project is in a working state at the moment, but I have not tested it extensively with different clients.
 
-## How to run
+# How to run
 ```bash
 $ cargo watch -x run
 ```
 
-### Docker compose example
+## Docker compose example
 ```yaml
   replex:
     container_name: replex
@@ -73,12 +73,11 @@ better_on_deck:
   next_up: "Jump back in"
 
 
-# NOT AVAILABLE YET
 # Either exclude all watched items from collections,
 # or specify a list of collections to exclude watched items from.
-# exclude_watched:
-#   all: true
-#   collections:
+exclude_watched:
+  all: true
+  collections:
 
 # List of Plex default collections that should be shown as hero rows
 # To have custom collecitons display as hero rows, add the label "REPLEXHERO" to the collection.
@@ -97,43 +96,43 @@ hero_rows:
 priority_hubs:
 ```
 
-## Features 
+# Features 
 Note: for all features see the config.yaml example
 
-### Interleaved rows
+## Interleaved rows
 Collection hubs with the same name from different libraries will be merged into one on the home screen.
 So a collection named "Trending" in the Movie library will be merged with a collection named "Trending" from a TV Show library on the home screen.
 
-### Redirect streams
+## Redirect streams
 Useful for when you're on an app box, in which case it might not be ideal to stream media through Replex.
 
 Note: Plex doesn't handle redirects well, and will not remember them.
 So every chunk of a stream will first hit Replex before being redirected to the redirect url.
 It is recommended to run Replex on the same machine as the Plex server.
 
-### Auto select version
+## Auto select version
 If you have multiple versions of a media item then this setting will choose the one that's closest to the client resolution. 
 So a 1080p TV will get the 1080P version while 4k gets the 4k version. 
 A user can still override this by selecting a different version from the client.
 
-### Force maximum quality
+## Force maximum quality
 This will force clients to use the maximum quality. 
 Meaning that if a client requests anything other than the maximum quality this will be ignored,
 and the maximum quality (direct play/stream when server allows for original) is used instead. 
 This doesn't prevent transcoding. It only sets the bitrate to original quality. 
 So if a client needs a different codec, container or audio it should still transcode.
 
-### Transcode fallback for
+## Transcode fallback for
 If the selected media triggers a video transcode, fallback to another version of the media. 
 Only triggers on video transcoding. Remuxing is still allowed.
 Options are "4k" and "1080".
 
 Example: if `transcode_fallback_for` is set to "4k" then 4k transcodes will fall back to another version if available.
 
-### Disable related content
+## Disable related content
 See: https://github.com/lostb1t/replex/issues/26
 
-### Better on Deck
+## Better on Deck
 The `better_on_deck` feature is an attempt to improve (subjective) the "Continue Watching" and "On Deck" hubs on the Plex home screen.
 This feature will disable the default "Continue Watching" and "On Deck" hubs and replace them with custom hubs.
 
@@ -143,7 +142,7 @@ This feature will try to find shows that you've watched but not finished and add
 The `in_progress` and `next_up` fields are the names of the collections that will be used to populate the new hubs.
 If you're using Kometa (formerly Plex Meta Manager) you can use the following collections for each library:
 
-#### Movie libraries
+### Movie libraries
 ```yaml
 Continue watching:
   summary: A list of movies that are in progress
@@ -158,7 +157,7 @@ Continue watching:
   collection_filtering: user
   minimum_items: 0
 ````
-#### TV show libraries
+### TV show libraries
 ```yaml
 collections:
   Continue watching: 
@@ -189,10 +188,13 @@ collections:
     collection_filtering: user
 ```
 
-### Exclude watched items (in progress)
-Currently, you can hide watched items from collections by adding the `REPLEX_EXCLUDE_WATCHED` label to the collection.
+## Exclude watched items
+You can hide watched items from collections by adding the `REPLEX_EXCLUDE_WATCHED` label to the collection, 
+or by adding your collection name to the `exclude_watched.collections` list in the config file.
 
-### Hero style rows
+Alternatively you can exclude all watched items from all collections by setting `exclude_watched.all` to `true`.
+
+## Hero style rows
 For custom collections you can change the hub style to hero by setting the label "REPLEXHERO" on a collection.
 
 For built-in rows you can use the config file, these are the options:
@@ -209,12 +211,12 @@ For built-in rows you can use the config file, these are the options:
 - tv.inprogress
 - tv.recentlyaired
 
-### Priority hubs
+## Priority hubs
 You can set a list of hubs that will be sorted to the top of the home screen.
 
 Note: the better on deck will ignore this list and still sort `in_progress` and `next_up` to the top.
 
-## Remote access
+# Remote access
 Because this app sits in front of Plex, the built-in remote access (and auto SSL) will not work and needs to be disabled.
 
 For testing purposes you can access through the browser at http://[replexip]:[replexport] (ex: http://localhost:3001).
@@ -230,9 +232,13 @@ Clear you client's cache to force Plex reloading the custom server url.
 Note: SSL is highly suggested, some clients default to not allowing insecure connections. 
 And some clients don't even support insecure connections (app.plex.tv).
 
-## Known limitations
+Note 2: Personally I haven't had much luck with running Replex locally without a reverse proxy and adding the domain to
+the custom server access urls. Sometimes it works, but Plex will tend to fall back to one of the custom access urls,
+or its own proxy.
+
+# Known limitations
 - Hero hubs on Android devices don't load more content. So hero hubs have a maximum of 100 items on Android.
-- On Android mobile, hero elements in libraries are slightly cut-off. This seems to be a Plex limitation.
+- On Android mobile, hero elements in libraries are slightly cut off. This seems to be a Plex limitation.
 - When exclude_watched is true a maximum item limit per library is opposed of 250 items. 
   So if you have a mixed row of 2 libraries the max results of that row will be 500 items.
 - disable_user_state: For movies this works in the webapp. Shows work across clients.
