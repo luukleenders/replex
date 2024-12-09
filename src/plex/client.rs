@@ -200,7 +200,11 @@ impl PlexClient {
     }
 
     pub fn generate_cache_key(&self, name: String) -> String {
-        format!("{}:{}", name, self.x_plex_token)
+        format!(
+            "{}:{}-{}",
+            name, self.x_plex_token,
+            self.x_plex_client_identifier.clone().unwrap_or_default()
+        )
     }
 
     fn build_headers(

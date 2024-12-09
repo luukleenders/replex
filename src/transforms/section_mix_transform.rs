@@ -46,16 +46,11 @@ impl Transform for SectionMixTransform {
 
         // Get all children for each collection
         for &id in &self.collection_ids {
-            let (limit, offset) = if !exclude_watched {
-                (self.limit, self.offset)
-            } else {
-                (250, 0)
-            };
+            let limit = self.limit;
+            let offset = self.offset;
 
             let mut children =
-                CollectionChildren::get(plex_client, id, Some(offset), Some(limit))
-                    .await
-                    .unwrap();
+                CollectionChildren::get(plex_client, id, Some(offset), Some(limit)).await?;
 
             if exclude_watched {
                 children.children_mut().retain(|c| !c.is_watched());

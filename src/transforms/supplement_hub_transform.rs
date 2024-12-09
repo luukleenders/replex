@@ -60,11 +60,10 @@ impl Transform for SupplementHubTransform {
                             let mut children = CollectionChildren::get(
                                 plex_client,
                                 id,
-                                Some(offset),
+                                Some(size),
                                 Some(limit),
                             )
-                            .await
-                            .unwrap();
+                            .await?;
 
                             hub.metadata.append(&mut children.children())
                         }
