@@ -59,7 +59,7 @@ async fn fetch_and_transform_upstream_data(
     let content_type = get_content_type_from_headers(req.headers());
 
     // Fetch data from upstream.
-    let upstream_res = plex_client.get(url.as_str()).await?;
+    let upstream_res = plex_client.get(url.as_str(), None).await?;
     let status = upstream_res.status();
     if status != reqwest::StatusCode::OK {
         tracing::error!(status = ?status, "Failed to get plex response");

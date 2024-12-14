@@ -49,6 +49,13 @@ pub struct Config {
         pub host: Option<String>,
     },
 
+    pub force_resolution: pub struct ForceResolution {
+        #[serde(default, deserialize_with = "vec_from_comma_separated_or_list")]
+        pub max_4k: Option<Vec<String>>,
+        #[serde(default, deserialize_with = "vec_from_comma_separated_or_list")]
+        pub max_1080p: Option<Vec<String>>,
+    },
+
     #[serde(default, deserialize_with = "vec_from_comma_separated_or_list")]
     pub hero_rows: Option<Vec<String>>,
 

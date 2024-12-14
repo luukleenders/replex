@@ -25,7 +25,7 @@ pub async fn handler(
     let url = url_from_request(req).to_string();
 
     // Perform the upstream request.
-    let upstream_res = plex_client.get(&url).await?;
+    let upstream_res = plex_client.get(&url, None).await?;
 
     match upstream_res.status() {
         StatusCode::OK => {

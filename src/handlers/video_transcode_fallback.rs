@@ -79,7 +79,7 @@ async fn get_transcoding_for_request(
     plex_client: &PlexClient,
 ) -> Result<TranscodingStatus, anyhow::Error> {
     let url = url_from_request(req);
-    let response = plex_client.get(url.as_str()).await?;
+    let response = plex_client.get(url.as_str(), None).await?;
     let transcode = MediaContainer::from_reqwest_response(response).await?;
     let is_transcoding = transcode.metadata.first().map_or(false, |m| {
         m.media.first().map_or(false, |media| {

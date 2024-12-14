@@ -18,7 +18,7 @@ impl MetaDataChildren for PlexClient {
         let path = build_path(id);
 
         Self::cache_or_fetch(&cache_key, || async {
-            let res = self.get(&path).await.map_err(|e| {
+            let res = self.get(&path, None).await.map_err(|e| {
                 anyhow::anyhow!("Failed to get collection children: {}", e)
             })?;
 

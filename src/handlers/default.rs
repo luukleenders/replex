@@ -90,7 +90,7 @@ async fn fetch_and_transform_upstream_data(
     url.set_path(&path);
 
     // Fetch data from upstream.
-    let upstream_res = plex_client.get(url.as_ref()).await?;
+    let upstream_res = plex_client.get(url.as_ref(), None).await?;
     let status = upstream_res.status();
     if status != reqwest::StatusCode::OK {
         tracing::error!(status = ?status, "Failed to get plex response");

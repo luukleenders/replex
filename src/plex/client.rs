@@ -36,6 +36,7 @@ impl PlexClient {
     pub async fn get(
         &self,
         path_or_url: &str,
+        extra_headers: Option<HeaderMap>,
     ) -> Result<reqwest::Response, SalvoError> {
         // Check if the input is a valid URL. If parsing fails, it's likely a path.
         let url = match Url::parse(path_or_url) {
@@ -49,7 +50,7 @@ impl PlexClient {
             }
         };
 
-        self.request(Method::GET, &url, None).await
+        self.request(Method::GET, &url, extra_headers).await
     }
 
     pub async fn request(
@@ -118,7 +119,7 @@ impl PlexClient {
     }
 
     pub async fn get_hubs(&self, _id: i32) -> Result<MediaContainer> {
-        let resp = self.get("/hubs").await.unwrap();
+        let resp = self.get("/hubs", None).await.unwrap();
         let container =
             MediaContainer::from_reqwest_response(resp).await.unwrap();
 
@@ -126,7 +127,7 @@ impl PlexClient {
     }
 
     pub async fn get_item_by_key(self, key: String) -> Result<MediaContainer> {
-        let resp = self.get(&key).await.unwrap();
+        let resp = self.get(&key, None).await.unwrap();
         let container =
             MediaContainer::from_reqwest_response(resp).await.unwrap();
 
