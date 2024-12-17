@@ -1,7 +1,7 @@
 use std::fmt;
 
 use crate::models::{SpecialBool, Stream};
-use serde_aux::prelude::deserialize_number_from_string;
+use serde_aux::prelude::deserialize_string_from_number;
 
 use replex_common::{struct_derives, struct_imports};
 
@@ -11,8 +11,8 @@ struct_imports!();
 #[serde(rename_all = "camelCase")]
 pub struct Media {
     #[yaserde(attribute = true)]
-    #[serde(deserialize_with = "deserialize_number_from_string")]
-    pub id: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<i64>,
     #[yaserde(attribute = true)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub duration: Option<i64>,
@@ -85,8 +85,8 @@ impl fmt::Display for Media {
 #[serde(rename_all = "camelCase")]
 pub struct MediaPart {
     #[yaserde(attribute = true)]
-    #[serde(deserialize_with = "deserialize_number_from_string")]
-    pub id: i64,
+    #[serde(deserialize_with = "deserialize_string_from_number")]
+    pub id: String,
     #[yaserde(attribute = true)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub key: Option<String>,

@@ -57,10 +57,8 @@ impl Transform for HubStyleTransform {
         }
 
         let children: Vec<MetaData> = futures.collect().await;
-        // let filtered_children = children.into_iter().flatten().collect();
-
         item.set_children(children);
 
-        return Ok(());
+        Ok(())
     }
 }
