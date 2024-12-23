@@ -1,14 +1,6 @@
 name: Docker build and push
 
 on:
-  workflow_dispatch:
-    inputs:
-      platform:
-        description: Platforms to build for
-        required: true
-        type: choice
-        options:
-          - "linux/amd64, linux/arm64"
   workflow_call:
     inputs:
       platform:

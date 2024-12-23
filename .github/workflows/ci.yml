@@ -6,7 +6,7 @@ on:
     inputs:
       platform:
         description: Platform to build for
-        options: ['linux/amd64', 'linux/arm64', 'darwin/amd64', 'darwin/arm64', 'windows/amd64']
+        options: ['linux/amd64, linux/arm64', 'darwin/amd64, darwin/arm64', 'windows/amd64']
         required: true
         type: choice
 
