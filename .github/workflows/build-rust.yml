@@ -51,9 +51,6 @@ jobs:
           shared-key: ${{ hashFiles('**/Cargo.lock') }}
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      - name: Set OpenSSL environment variable
-        run: echo "OPENSSL_DIR=/usr/lib/ssl" >> $GITHUB_ENV
-
       - name: Build binaries
         uses: houseabsolute/actions-rust-cross@v0
         with:
