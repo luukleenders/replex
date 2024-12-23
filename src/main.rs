@@ -1,7 +1,7 @@
 use replex::config::Config;
 use salvo::prelude::*;
 use std::env;
-use std::time::Duration;
+// use std::time::Duration;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 use replex::cache::CACHE_MANAGER;
@@ -36,7 +36,7 @@ async fn main() {
             .bind()
             .await,
     )
-    .conn_idle_timeout(Duration::from_secs(60 * 101))
+    // .conn_idle_timeout(Duration::from_secs(60 * 101))
     .serve(main_router())
     .await;
 }

@@ -12,7 +12,7 @@ mod test;
 mod video_transcode_fallback;
 
 pub use common_handlers::{
-    empty_media_container_handler, photo_request_handler, ping,
+    empty_media_container_handler, hero_image_handler, photo_request_handler, ping, local_media_handler,
 };
 
 pub use auto_select_version::handler as auto_select_version_handler;

@@ -302,7 +302,7 @@ pub struct MediaContainer {
     pub transcode_decision_text: Option<String>,
 
     #[serde(default, rename = "Meta", skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute = true, rename = "Meta")]
+    #[yaserde(rename = "Meta")]
     pub meta: Option<Meta>,
 }
 

@@ -20,7 +20,7 @@ use super::models::PlexContext;
 #[derive(Debug, Clone)]
 pub struct PlexClient {
     pub http_client: reqwest_middleware::ClientWithMiddleware,
-    pub host: String, // TODO: Dont think this suppsoed to be here. Should be higher up
+    pub host: String, // TODO: Dont think this supposed to be here. Should be higher up
     pub cache: Arc<CacheManager>,
     // Platform name, e.g. iOS, macOS, etc.
     pub x_plex_platform: Platform,
@@ -135,14 +135,16 @@ impl PlexClient {
 
     pub async fn get_provider_data(
         &self,
-        guid: &String,
+        uuid: &String,
     ) -> Result<MediaContainer> {
+        // let config = Config::load();
         let path = format!(
             "https://metadata.provider.plex.tv/library/metadata/{}",
-            guid
+            uuid
         );
 
         let mut headers = HeaderMap::new();
+        // let mut token = config.token.clone();
         headers.insert(
             "X-Plex-Token",
             header::HeaderValue::from_str(self.x_plex_token.clone().as_str())
@@ -169,13 +171,49 @@ impl PlexClient {
         Ok(container)
     }
 
+    // pub async fn get_provider_data(
+    //     &self,
+    //     guid: &String,
+    // ) -> Result<MediaContainer> {
+    //     let path = format!(
+    //         "https://metadata.provider.plex.tv/library/metadata/{}",
+    //         guid
+    //     );
+    //
+    //     let mut headers = HeaderMap::new();
+    //     headers.insert(
+    //         "X-Plex-Token",
+    //         header::HeaderValue::from_str(self.x_plex_token.clone().as_str())
+    //             .unwrap(),
+    //     );
+    //     headers.insert(
+    //         "Accept",
+    //         header::HeaderValue::from_static("application/json"),
+    //     );
+    //
+    //     let res = self
+    //         .request(Method::GET, &path, Some(headers))
+    //         .await
+    //         .map_err(|e| {
+    //             anyhow::anyhow!("Failed to get provider data: {}", e)
+    //         })?;
+    //
+    //     let container = MediaContainer::from_reqwest_response(res)
+    //         .await
+    //         .map_err(|e| {
+    //             anyhow::anyhow!("Error deserializing response: {}", e)
+    //         })?;
+    //
+    //     Ok(container)
+    // }
+
     pub fn from_request(req: &Request, params: &PlexContext) -> Self {
         let headers = Self::build_headers(params, req.headers());
         let config = Config::load();
         let token = params
             .token
             .as_ref()
-            .expect("Expected to have a token in header or query");
+            .unwrap_or(&config.token);
 
         Self {
             http_client: reqwest_middleware::ClientBuilder::new(
@@ -211,12 +249,13 @@ impl PlexClient {
         params: &PlexContext,
         req_headers: &HeaderMap,
     ) -> HeaderMap {
+        let config = Config::load();
         let mut headers = HeaderMap::new();
 
         headers.insert("Accept", Self::header_value("application/json"));
         headers.insert(
             "X-Plex-Token",
-            Self::header_value(params.token.as_ref().unwrap()),
+            Self::header_value(params.token.as_ref().unwrap_or(&config.token)),
         );
         headers.insert(
             "X-Plex-Platform",

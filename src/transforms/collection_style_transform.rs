@@ -41,7 +41,8 @@ impl Transform for CollectionStyleTransform {
             let style = ClientHeroStyle::from_context(options);
             let mut futures = FuturesOrdered::new();
 
-            container.meta = Some(hero_meta());
+            container.meta = Some(hero_meta(options.platform.clone()));
+
 
             for mut child in children {
                 if let Some(ref child_type) = style.child_type {

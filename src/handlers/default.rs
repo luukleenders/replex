@@ -84,10 +84,12 @@ async fn fetch_and_transform_upstream_data(
 ) -> anyhow::Result<WrappedMediaContainer> {
     let mut url = url_from_request(req);
     let path = req.param::<String>("**rest").unwrap();
-    let style = req.param::<Style>("style").unwrap();
+    let style = req.param::<Style>("style").unwrap_or(Style::Shelf);
     let content_type = get_content_type_from_headers(req.headers());
 
     url.set_path(&path);
+
+    println!("URL: {:?}", url);
 
     // Fetch data from upstream.
     let upstream_res = plex_client.get(url.as_ref()).await?;

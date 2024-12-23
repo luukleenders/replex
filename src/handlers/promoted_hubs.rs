@@ -68,12 +68,17 @@ fn adjust_query_params(req: &mut Request, params: &PlexContext, _config: &Config
 }
 
 async fn fetch_and_transform_upstream_data(
-    req: &Request,
+    req: &mut Request,
     params: &PlexContext,
     plex_client: &PlexClient,
 ) -> anyhow::Result<WrappedMediaContainer> {
     let url = url_from_request(req);
     let content_type = get_content_type_from_headers(req.headers());
+
+    // patch, plex seems to pass wrong contentdirid, probaply cause we all load it inti the first
+    let mut queries = req.queries().clone();
+    queries.remove("contentDirectoryID");
+    replace_query(queries, req);
 
     // Fetch data from upstream.
     let upstream_res = plex_client.get(url.as_str()).await?;

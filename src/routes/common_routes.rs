@@ -6,6 +6,7 @@ use crate::config::Config;
 use crate::handlers::*;
 use crate::middlewares::Timeout;
 
+pub const HERO_IMAGE: &str = "/replex/image/hero/<type>/<uuid>/<token>";
 pub const HUBS_CONTINUE_WATCHING: &str = "/hubs/continueWatching";
 pub const HUBS_PROMOTED: &str = "/hubs/promoted";
 pub const HUBS_SECTIONS: &str = "/hubs/sections/<id>";
@@ -33,6 +34,7 @@ pub fn routes() -> Router {
                 .hoop(Timeout::new(Duration::from_secs(5)))
                 .goal(proxy_request_handler),
         )
+        .push(Router::with_path(HERO_IMAGE).get(hero_image_handler))
         .push(Router::with_path(HUBS_PROMOTED).get(promoted_hubs_handler))
         .push(Router::with_path(HUBS_SECTIONS).get(section_hubs_handler))
         .push(Router::with_path(REPLEX_COLLECTION_CHILDREN).get(collection_children_handler))
@@ -45,6 +47,7 @@ pub fn routes() -> Router {
         .push(
             Router::with_path(PHOTO_TRANSCODE)
                 .hoop(photo_request_handler)
+                .hoop(local_media_handler)
                 .goal(proxy_request_handler),
         )
         .push(Router::with_path(REST).goal(proxy_request_handler))

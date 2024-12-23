@@ -76,6 +76,10 @@ pub struct MetaData {
     #[yaserde(attribute = true)]
     pub composite: Option<String>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[yaserde(attribute = true, rename = "playlistType")]
+    pub playlist_type: Option<String>,
+
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[yaserde(attribute = true)]
     pub banner: Option<String>,
@@ -342,7 +346,7 @@ pub struct MetaData {
     pub guids: Vec<Guid>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[yaserde(attribute = true, rename = "userState")]
+    #[yaserde(attribute = true, rename = "State")]
     pub user_state: Option<SpecialBool>,
 
     #[serde(default, rename = "Image", skip_serializing_if = "Vec::is_empty")]
@@ -511,6 +515,15 @@ impl MetaData {
 
     pub fn is_media(&self) -> bool {
         !self.is_hub() && (self.r#type == "movie" || self.r#type == "show")
+    }
+
+    pub fn is_playlist(&self) -> bool {
+        self.context.is_some()
+            && self
+            .context
+            .clone()
+            .unwrap()
+            .starts_with("hub.home.playlists")
     }
 
     pub fn is_collection_hub(&self) -> bool {

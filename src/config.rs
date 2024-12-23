@@ -20,6 +20,8 @@ pub struct Config {
 
     pub port: Option<u64>,
 
+    pub token: String,
+
     pub better_on_deck: pub struct OnDeck {
         #[serde(default, deserialize_with = "bool_from_str_or_int")]
         pub enabled: bool,
