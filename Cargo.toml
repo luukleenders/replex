@@ -1,4 +1,4 @@
-workspace = { members = ["replex-common"] }
+workspace = { members = ["replex-common", "replex-deps"] }
 [package]
 name = "replex"
 version = "1.0.12"
@@ -6,43 +6,30 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.69"
-async-recursion = "1.0.4"
 async-trait = "0.1"
-base32 = "0.4.0"
-# bincode = "1.3.3"
 bincode = { version = "2.0.0-rc.3", features = ["serde"] }
 bytes = "1.4.0"
-replex-common = { path = "replex-common" , version = "1.0.12" }
-config = "0.14.0"
-# console-subscriber = "0.1.10"
-data-encoding = "2.4.0"
-derive_more = "0.99.17"
 dotenv = "0.15.0"
 figment = { version = "0.10.10", features = ["env", "yaml"] }
 futures = "0.3.28"
 futures-util = "0.3.26"
-heapless = "0.8.0"
-http = "0.2.12"
-http-body-util = "0.1.0-rc.3"
-hyper = { version = "1.0.0-rc.4", features = ["full"] }
+http = "1.1"
+http-body-util = "0.1.2"
+hyper = { version = "1.1", features = ["full"] }
 itertools = "0.10.5"
-lazy_static = "1.4.0"
 mime = "0.3.16"
 mime_guess = "2.0.4"
-moka = { version = "0.11.2", features = ["future"] }
-multimap = "0.9.0"
+moka = { version = "0.12.8", features = ["future"] }
+multimap = "0.10.0"
 nestify = "0.3.3"
 once_cell = "1.18.0"
 openssl = { version = "0.10", features = ["vendored"] }
-pathetic = "0.3.0"
 regex = "1.9.3"
-reqwest = { version = "0.11.26", features = ["gzip", "json"] }
-reqwest-middleware = "0.2.4"
-reqwest-retry = "0.3.0"
-rhai = { version = "1.15.1", features = ["serde"] }
-#salvo = { git = "https://github.com/salvo-rs/salvo.git", features = ["anyhow", "websocket", "proxy", "cors", "acme", "cache", "otel", "compression", "concurrency-limiter", "affix"] }
-#salvo = { git = "https://github.com/salvo-rs/salvo", branch = "proxy", features = ["websocket", "proxy", "cors", "acme", "cache", "otel", "compression", "concurrency-limiter", "affix"] }
-salvo = { version = "0.61.0", features = [
+replex-common = { path = "replex-common" }
+replex-deps = { path = "replex-deps" }
+reqwest = { version = "0.12", features = ["gzip", "json", "blocking"] }
+reqwest-middleware = "0.3"
+salvo = { version = "0.68.5", features = [
   "anyhow",
   "websocket",
   "proxy",
@@ -55,37 +42,21 @@ salvo = { version = "0.61.0", features = [
   "affix",
 ] }
 serde = { version = "1.0", features = ["derive"] }
-serde-aux = "^4.2.0"
+serde-aux = "4.5.0"
 serde_json = "1.0"
 serde_path_to_error = "0.1.14"
 serde_urlencoded = "0.7.1"
-serde_with = { version = "3.0", features = ["json"] }
+serde_with = { version = "3.8.1", features = ["json"] }
 strum = "0.24.1"
-strum_macros = "0.24.3"
-tmdb-api = "0.5.0"
-tokio = { version = "1.32.0", features = ["full", "tracing"] }
-tokio-stream = "0.1.15"
-tokio-tungstenite = "0.21.0"
-tracing = "0.1.37"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-uncased = "0.9.9"
-url = "2.3.1"
-xml-rs = "0.8.16"
+tokio = { version = "1.38.0", features = ["full", "tracing"] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+url = "2.4.1"
+xml-rs = "0.8.24"
 yaserde = "0.12.0"
 yaserde_derive = "0.12.0"
-#format_serde_error = "0.3"
 
 [dev-dependencies]
-async-std = { version = "^1.12", features = ["attributes"] }
-# httpmock = "0.6.7"
-jsonxf = "1.1.1"
-pretty_assertions = "1.3.0"
-rstest = "0.18.1"
-#replex = { path = ".", features = ["test"] }#[features]#test = []
-# [patch.crates-io]
-# salvo-proxy = { path = "../salvo/crates/proxy" }
-# salvo_core = { path = "../salvo/crates/core" }
-#salvo-cache = { path = "../salvo/crates/cache" }
 
 [profile.release]
 debug = false

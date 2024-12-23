@@ -1,8 +1,7 @@
 use salvo::prelude::*;
-use tokio::time::{timeout, Duration};
-
+use salvo::proxy::{Proxy, ReqwestClient};
+use tokio::time::Duration;
 use crate::config::Config;
-use crate::proxy::Proxy;
 
 #[handler]
 pub async fn handler(
@@ -12,22 +11,27 @@ pub async fn handler(
     ctrl: &mut FlowCtrl,
 ) {
     let config = Config::load();
-    let host = config.host.clone();
 
-    let proxy = Proxy::new(host);
-    let timeout_duration = Duration::from_secs(60 * 200);
-    let proxy_result = timeout(timeout_duration, async {
-        proxy.handle(req, depot, res, ctrl).await
-    })
-    .await;
+    let mut proxy = Proxy::new(
+        config.host.clone(),
+        ReqwestClient::new(reqwest::Client::builder()
+            .timeout(Duration::from_secs(60 * 200))
+            .build()
+            .unwrap())
+    );
+    proxy = proxy.url_path_getter(default_url_path_getter);
+    proxy = proxy.url_query_getter(default_url_query_getter);
+    proxy.handle(req, depot, res, ctrl).await;
+}
 
-    // Handle the request with the proxy
-    // This will forward the request to the target URL and return the response to the client
-    match proxy_result {
-        Ok(_) => {}
-        Err(e) => {
-            tracing::error!("Proxy error: {:?}", e);
-            res.status_code(StatusCode::INTERNAL_SERVER_ERROR);
-        }
-    }
+/// Default URL path getter for the proxy.
+/// Extracts the path from the incoming request's URI.
+fn default_url_path_getter(req: &Request, _depot: &Depot) -> Option<String> {
+    Some(req.uri().path().to_string())
+}
+
+/// Default URL query getter for the proxy.
+/// Extracts the query string from the incoming request's URI, if any.
+fn default_url_query_getter(req: &Request, _depot: &Depot) -> Option<String> {
+    req.uri().query().map(|q| q.to_string())
 }

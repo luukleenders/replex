@@ -6,7 +6,7 @@ use serde_aux::prelude::deserialize_number_from_string;
 
 use crate::plex::models::PlexContext;
 
-use super::{DeviceType, MediaContainer, Platform};
+use super::{DeviceType, MediaContainer, Platform, SpecialBool};
 
 struct_imports!();
 
@@ -96,6 +96,7 @@ pub struct Context {
 pub struct DisplayField {
     #[yaserde(attribute = true, rename = "type")]
     pub r#type: Option<String>,
+    #[yaserde(attribute = true, flatten = true)]
     pub fields: Vec<String>,
 }
 
@@ -106,7 +107,7 @@ pub struct MetaType {
     pub r#type: Option<String>,
 
     #[yaserde(attribute = true)]
-    pub active: Option<bool>,
+    pub active: Option<SpecialBool>,
 
     #[yaserde(attribute = true)]
     pub title: Option<String>,
@@ -127,18 +128,34 @@ pub struct DisplayImage {
 #[serde(rename_all = "camelCase")]
 pub struct Meta {
     #[serde(default, rename = "DisplayFields")]
+    #[yaserde(rename = "DisplayFields")]
     pub display_fields: Vec<DisplayField>,
-
     #[serde(default, rename = "DisplayImage")]
+    #[yaserde(rename = "DisplayImage")]
     pub display_images: Vec<DisplayImage>,
-
-    #[serde(default)]
-    #[yaserde(attribute = true, rename = "type")]
-    pub r#type: Option<MetaType>,
-    // #[yaserde(attribute = true)]
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub style: Option<String>,
+    #[serde(default, rename = "Type")]
+    #[yaserde(rename = "Type")]
+    // pub r#type: Option<MetaType>,
+    pub r#type: Vec<MetaType>,
 }
+
+//
+// #[struct_derives()]
+// #[serde(rename_all = "camelCase")]
+// pub struct Meta {
+//     #[serde(default, rename = "DisplayFields")]
+//     pub display_fields: Vec<DisplayField>,
+//
+//     #[serde(default, rename = "DisplayImage")]
+//     pub display_images: Vec<DisplayImage>,
+//
+//     #[serde(default, rename = "type")]
+//     #[yaserde(attribute = true, rename = "type")]
+//     pub r#type: Option<MetaType>,
+//     // #[yaserde(attribute = true)]
+//     // #[serde(skip_serializing_if = "Option::is_none")]
+//     // pub style: Option<String>,
+// }
 
 #[derive(Debug)]
 pub struct ClientHeroStyle {
@@ -149,6 +166,7 @@ pub struct ClientHeroStyle {
     pub child_type: Option<String>,
     pub cover_art_as_thumb: bool, // if we should return the coverart in the thumb field
     pub cover_art_as_art: bool,   // if we should return the coverart in the art field
+    pub style_type: Option<String>,
 }
 
 impl Default for ClientHeroStyle {
@@ -158,9 +176,10 @@ impl Default for ClientHeroStyle {
             include_meta: true,
             style: Some("hero".to_string()),
             r#type: "mixed".to_string(),
-            child_type: None,
+            child_type: Some("clip".to_string()),
             cover_art_as_thumb: false,
             cover_art_as_art: true,
+            style_type: None,
         }
     }
 }
@@ -180,11 +199,12 @@ impl ClientHeroStyle {
                         Self {
                             style: Some("hero".to_string()),
                             // clip wil make the item info disappear on TV
-                            r#type: "mixed".to_string(),
+                            r#type: "clip".to_string(),
                             // using clip makes it load thumbs instead of art as cover art. So we don't have to touch the background
                             child_type: Some("clip".to_string()),
-                            cover_art_as_art: false,
+                            cover_art_as_art: true,
                             cover_art_as_thumb: true,
+                            style_type: Some("AndroidTv".to_string()),
                             ..ClientHeroStyle::default()
                         }
                     }
@@ -193,6 +213,7 @@ impl ClientHeroStyle {
                         r#type: "clip".to_string(),
                         child_type: Some("clip".to_string()),
                         cover_art_as_art: true,
+                        style_type: Some("Android".to_string()),
                         ..ClientHeroStyle::default()
                     },
                 }
@@ -200,7 +221,7 @@ impl ClientHeroStyle {
             Platform::Roku => ClientHeroStyle::roku(),
             Platform::Ios => ClientHeroStyle::ios_style(),
             Platform::TvOS => ClientHeroStyle::tvos_style(),
-            Platform::Generic => ClientHeroStyle::generic(),
+            // Platform::Generic => ClientHeroStyle::generic(),
             _ => {
                 if product.clone().to_lowercase() == "plex web" {
                     ClientHeroStyle::web()
@@ -228,6 +249,7 @@ impl ClientHeroStyle {
     pub fn generic() -> Self {
         Self {
             include_meta: false,
+            style_type: Some("Generic".to_string()),
             ..ClientHeroStyle::default()
         }
     }
@@ -235,7 +257,10 @@ impl ClientHeroStyle {
     pub fn web() -> Self {
         Self {
             include_meta: false,
+            cover_art_as_art: true,
             cover_art_as_thumb: true,
+            child_type: Some("clip".to_string()),
+            style_type: Some("Web".to_string()),
             ..ClientHeroStyle::default()
         }
     }
@@ -243,12 +268,14 @@ impl ClientHeroStyle {
     pub fn roku() -> Self {
         Self {
             style: Some("hero".to_string()),
+            style_type: Some("Roku".to_string()),
             ..ClientHeroStyle::default()
         }
     }
 
     pub fn htpc_style() -> Self {
         Self {
+            style_type: Some("HTPC".to_string()),
             ..ClientHeroStyle::default()
         }
     }
@@ -257,6 +284,8 @@ impl ClientHeroStyle {
         Self {
             cover_art_as_art: true,
             cover_art_as_thumb: false, // ios doesnt load the subview as hero.
+            child_type: Some("clip".to_string()),
+            style_type: Some("iOS".to_string()),
             ..ClientHeroStyle::default()
         }
     }
@@ -265,6 +294,7 @@ impl ClientHeroStyle {
         Self {
             cover_art_as_art: true,
             cover_art_as_thumb: false, // ios doesnt load the subview as hero.
+            style_type: Some("tvOS".to_string()),
             ..ClientHeroStyle::default()
         }
     }

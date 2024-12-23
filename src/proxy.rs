@@ -1,75 +1,34 @@
-use salvo::BoxedError;
+use std::sync::Arc;
 use salvo::{
     async_trait,
     http::{Request, Response},
-    proxy::{Proxy as SalvoProxy, Upstreams},
+    proxy::{Proxy as SalvoProxy, ReqwestClient},
     Depot, FlowCtrl, Handler,
 };
 
-pub struct Proxy<U> {
-    inner: SalvoProxy<U>,
+pub struct Proxy {
+    inner: SalvoProxy<StaticUpstream, ReqwestClient>,
 }
 
-impl<U> Proxy<U>
-where
-    U: Upstreams,
-    U::Error: Into<BoxedError>,
-{
-    pub fn new(upstreams: U) -> Self {
+impl Proxy {
+    pub fn new(upstream: Arc<str>, client: reqwest::Client) -> Self {
+        let static_upstreams = StaticUpstream::new(upstream);
+        let reqwest_client = ReqwestClient::new(client);
+
         Self {
-            inner: SalvoProxy::new(upstreams)
+            inner: SalvoProxy::new(static_upstreams, reqwest_client)
                 .url_path_getter(default_url_path_getter)
                 .url_query_getter(default_url_query_getter),
         }
     }
 
-    pub fn with_client(upstreams: U, client: reqwest::Client) -> Self {
-        Self {
-            inner: SalvoProxy::with_client(upstreams, client)
-                .url_path_getter(default_url_path_getter)
-                .url_query_getter(default_url_query_getter),
-        }
-    }
-}
-
-impl<U> Clone for Proxy<U>
-where
-    U: Upstreams + Clone,
-    U::Error: Into<BoxedError>,
-{
-    fn clone(&self) -> Self {
-        let upstreams = self.inner.upstreams.clone();
-        let client = self.inner.client.clone();
-
-        Self {
-            inner: SalvoProxy::with_client(upstreams, client)
-                .url_path_getter(default_url_path_getter)
-                .url_query_getter(default_url_query_getter),
-        }
-    }
-}
-
-#[async_trait]
-impl<U> Handler for Proxy<U>
-where
-    U: Upstreams,
-    U::Error: Into<BoxedError>,
-{
-    async fn handle(
+    pub async fn handle(
         &self,
         req: &mut Request,
         depot: &mut Depot,
         res: &mut Response,
         ctrl: &mut FlowCtrl,
     ) {
-        // Implement any required request modifications here
-        // For example, to add or modify headers:
-        // if let Ok(config) = Config::dynamic(req).extract() {
-        //     if let Some(host) = config.host {
-        //         req.headers_mut().insert(http::header::HOST, host.parse().unwrap());
-        //     }
-        // }
-
         self.inner.handle(req, depot, res, ctrl).await;
     }
 }
@@ -84,4 +43,37 @@ fn default_url_path_getter(req: &Request, _depot: &Depot) -> Option<String> {
 /// Extracts the query string from the incoming request's URI, if any.
 fn default_url_query_getter(req: &Request, _depot: &Depot) -> Option<String> {
     req.uri().query().map(|q| q.to_string())
+}
+
+pub struct StaticUpstream(pub Arc<str>);
+
+impl StaticUpstream {
+    pub fn new(upstream: Arc<str>) -> Self {
+        Self(upstream)
+    }
+}
+
+#[derive(Debug)]
+pub struct StaticUpstreamError {
+    pub message: String,
+}
+
+impl std::fmt::Display for StaticUpstreamError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "StaticUpstreamError: {}", self.message)
+    }
+}
+
+impl std::error::Error for StaticUpstreamError {}
+
+#[async_trait]
+impl salvo::proxy::Upstreams for StaticUpstream {
+    type Error = StaticUpstreamError;
+
+    fn elect(
+        &self,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<&str, Self::Error>> + Send>> {
+        let upstream = self.0.clone(); // Clone the Arc<str> to extend its lifetime.
+        Box::pin(async move { Ok(&*upstream) })
+    }
 }

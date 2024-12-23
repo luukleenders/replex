@@ -28,20 +28,20 @@ pub struct PlexContext {
     pub screen_resolution: Vec<Resolution>,
     #[salvo(extract(rename = "X-Plex-Device-Screen-Resolution"))]
     pub screen_resolution_original: Option<String>,
-    #[salvo(extract(rename = "x-plex-client-capabilities"))]
+    #[salvo(extract(rename = "X-Plex-Client-Capabilities", alias = "x-plex-client-capabilities"))]
     pub client_capabilities: Option<String>,
     #[salvo(extract(rename = "X-Plex-Product"))]
     pub product: Option<String>,
     #[salvo(extract(rename = "X-Plex-Version"))]
     pub version: Option<String>,
     pub count: Option<i32>,
-    #[salvo(extract(rename = "X-Plex-Client-Identifier"))]
+    #[salvo(extract(rename = "X-Plex-Client-Identifier", alias = "x-plex-client-identifier"))]
     pub client_identifier: Option<String>,
-    #[salvo(extract(rename = "X-Plex-Session-Id"))]
+    #[salvo(extract(rename = "X-Plex-Session-Id", alias = "x-plex-session-id"))]
     pub session_id: Option<String>,
-    #[salvo(extract(rename = "X-Plex-Session-Identifier"))]
+    #[salvo(extract(rename = "X-Plex-Session-Identifier", alias = "x-plex-session-identifier"))]
     pub session_identifier: Option<String>,
-    #[salvo(extract(rename = "X-Plex-Playback-Session-Id"))]
+    #[salvo(extract(rename = "X-Plex-Playback-Session-Id", alias = "x-plex-playback-session-id"))]
     pub playback_session_id: Option<String>,
     #[salvo(extract(rename = "X-Plex-Playback-Id"))]
     pub playback_id: Option<String>,
@@ -67,6 +67,8 @@ pub struct PlexContext {
     pub container_size: Option<i32>,
     #[salvo(extract(rename = "X-Plex-Container-Start"))]
     pub container_start: Option<i32>,
+    #[salvo(extract(rename = "X-Plex-Username"))]
+    pub username: Option<String>,
     #[salvo(extract(rename = "x-plex-http-pipeline"))]
     pub http_pipeline: Option<String>,
     #[serde(default, deserialize_with = "bool_from_int")]
@@ -77,15 +79,17 @@ pub struct PlexContext {
     pub include_advanced: bool,
     #[salvo(extract(rename = "X-Forwarded-For", alias = "X-Real-Ip"))]
     pub forwarded_for: Option<String>,
-    #[salvo(extract(rename = "X-Forwarded-Proto"))]
+    #[salvo(extract(rename = "X-Forwarded-Proto", alias = "x-forwarded-proto"))]
     pub forwarded_proto: Option<String>,
-    #[salvo(extract(rename = "x-forwarded-host"))]
+    #[salvo(extract(rename = "X-Forwarded-Host", alias = "x-forwarded-host"))]
     pub forwarded_host: Option<String>,
-    #[salvo(extract(rename = "X-Forwarded-Port"))]
+    #[salvo(extract(rename = "X-Forwarded-Port", alias = "x-forwarded-port"))]
     pub forwarded_port: Option<String>,
     #[serde(default, deserialize_with = "bool_from_int")]
     #[salvo(extract(rename = "excludeAllLeaves"))]
     pub exclude_all_leaves: bool,
+    #[salvo(extract(rename = "host"))]
+    pub host: Option<String>,
     // photo transcode
     pub size: Option<String>,
     pub width: Option<i32>,

@@ -15,7 +15,7 @@ use salvo::Request as SalvoRequest;
 pub type HyperResponse = hyper::Response<ResBody>;
 
 use crate::config::Config;
-use crate::models::{ContentType, DisplayField, DisplayImage, MediaContainer, Meta, MetaData};
+use crate::models::{ContentType, DisplayField, DisplayImage, MediaContainer, Meta, MetaData, MetaType, Platform, SpecialBool};
 use crate::plex::client::PlexClient;
 use crate::plex::traits::MetaDataChildren;
 
@@ -194,55 +194,62 @@ pub fn mime_to_content_type(mime: Mime) -> ContentType {
     }
 }
 
-pub fn hero_meta() -> Meta {
+pub fn hero_meta(platform: Platform) -> Meta {
+    println!("Platform: {:?}", platform);
+    let r#type = match platform {
+        Platform::Chrome => "hero",
+        Platform::Safari => "hero",
+        _ => "clip",
+    };
+
     Meta {
-        r#type: None,
-        // r#type: Some(MetaType {
-        //     active: Some(true),
-        //     r#type: Some("mixed".to_string()),
-        //     title: Some("All".to_string()),
-        // }),
+        // r#type: None,
+        r#type: vec![MetaType {
+            active: Some(SpecialBool::new(true)),
+            r#type: Some(r#type.to_string()),
+            title: Some("Videos".to_string()),
+        }],
         // style: Some(Style::Hero.to_string().to_lowercase()),
         // display_fields: vec![],
         display_fields: vec![
-            DisplayField {
-                r#type: Some("movie".to_string()),
-                fields: vec!["title".to_string(), "originallyAvailableAt".to_string()],
-            },
-            DisplayField {
-                r#type: Some("show".to_string()),
-                fields: vec!["title".to_string(), "originallyAvailableAt".to_string()],
-            },
+            // DisplayField {
+            //     r#type: Some("movie".to_string()),
+            //     fields: vec!["title".to_string(), "originallyAvailableAt".to_string()],
+            // },
+            // DisplayField {
+            //     r#type: Some("show".to_string()),
+            //     fields: vec!["title".to_string(), "originallyAvailableAt".to_string()],
+            // },
             DisplayField {
                 r#type: Some("clip".to_string()),
-                fields: vec!["title".to_string(), "originallyAvailableAt".to_string()],
+                fields: vec!["title".to_string(), "parentTitle".to_string(), "originallyAvailableAt".to_string()],
             },
-            DisplayField {
-                r#type: Some("mixed".to_string()),
-                fields: vec!["title".to_string(), "originallyAvailableAt".to_string()],
-            },
+            // DisplayField {
+            //     r#type: Some("mixed".to_string()),
+            //     fields: vec!["title".to_string(), "originallyAvailableAt".to_string()],
+            // },
         ],
         display_images: vec![
-            DisplayImage {
-                r#type: Some("hero".to_string()),
-                image_type: Some("coverArt".to_string()),
-            },
-            DisplayImage {
-                r#type: Some("mixed".to_string()),
-                image_type: Some("coverArt".to_string()),
-            },
+            // DisplayImage {
+            //     r#type: Some("hero".to_string()),
+            //     image_type: Some("coverArt".to_string()),
+            // },
+            // DisplayImage {
+            //     r#type: Some("mixed".to_string()),
+            //     image_type: Some("coverArt".to_string()),
+            // },
             DisplayImage {
                 r#type: Some("clip".to_string()),
                 image_type: Some("coverArt".to_string()),
             },
-            DisplayImage {
-                r#type: Some("movie".to_string()),
-                image_type: Some("coverArt".to_string()),
-            },
-            DisplayImage {
-                r#type: Some("show".to_string()),
-                image_type: Some("coverArt".to_string()),
-            },
+            // DisplayImage {
+            //     r#type: Some("movie".to_string()),
+            //     image_type: Some("coverArt".to_string()),
+            // },
+            // DisplayImage {
+            //     r#type: Some("show".to_string()),
+            //     image_type: Some("coverArt".to_string()),
+            // },
         ],
     }
 }

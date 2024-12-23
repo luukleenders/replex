@@ -28,6 +28,7 @@ impl Transform for HubStyleTransform {
             return Ok(());
         }
 
+        let platform = options.platform.clone();
         let style = ClientHeroStyle::from_context(options);
         let children = item.children();
         let child_type = style.child_type;
@@ -38,7 +39,7 @@ impl Transform for HubStyleTransform {
         item.placeholder = Some(true);
 
         if style.include_meta {
-            item.meta = Some(hero_meta());
+            item.meta = Some(hero_meta(platform));
         }
 
         for mut child in children {

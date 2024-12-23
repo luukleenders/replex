@@ -42,7 +42,7 @@ impl CacheManager {
     {
         let config = config::standard();
 
-        if let Some(arc_data) = self.inner.get(key) {
+        if let Some(arc_data) = self.inner.get(key).await {
             let (decoded, _len): (T, usize) =
                 bincode::decode_from_slice(&arc_data[..], config)?;
 
