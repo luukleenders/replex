@@ -47,6 +47,8 @@ impl Transform for CollectionStyleTransform {
             for mut child in children {
                 if let Some(ref child_type) = style.child_type {
                     child.r#type = child_type.clone();
+                } else {
+                    child.r#type = "clip".to_string();
                 }
 
                 futures.push_back(async move {
